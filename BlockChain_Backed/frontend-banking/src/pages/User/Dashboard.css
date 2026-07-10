@@ -1,0 +1,150 @@
+/* Bao bọc toàn bộ nội dung trang Dashboard */
+/* Đảm bảo nó chiếm 100% chiều rộng và chiều cao của cái khung (Layout) chứa nó */
+.dashboard-container {
+    width: 100%;
+    min-height: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    background-color: #f5f7fa; /* Màu nền xám nhạt giúp các thẻ trắng nổi bật hơn */
+}
+
+/* Lưới chứa 2 thẻ trên cùng (Số dư và Thu/Chi) */
+.dashboard-grid {
+    display: grid;
+    /* Dùng grid để chia cột. minmax giúp thẻ co giãn linh hoạt trên các màn hình */
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+/* ----------------------------------
+   1. THẺ SỐ DƯ TÀI KHOẢN 
+----------------------------------- */
+.balance-card {
+    background: linear-gradient(135deg, #1890ff 0%, #001529 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(24, 144, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.balance-title {
+    font-size: 15px;
+    opacity: 0.85;
+    letter-spacing: 0.5px;
+}
+
+.balance-amount {
+    font-size: 38px; /* Chữ to hơn chút cho uy tín */
+    font-weight: 700;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.toggle-blind-btn {
+    background: rgba(255, 255, 255, 0.2); /* Nút bấm có nền mờ mờ */
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.toggle-blind-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ----------------------------------
+   2. THẺ THỐNG KÊ THU CHI
+----------------------------------- */
+.stats-card {
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-evenly; /* Chia đều khoảng cách 2 bên */
+    align-items: center;
+}
+
+.stat-box {
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 15px;
+    color: #8c8c8c;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.stat-value.income { color: #52c41a; }
+.stat-value.expense { color: #ff4d4f; }
+
+/* Đường kẻ dọc phân cách */
+.stats-divider {
+    width: 2px;
+    height: 60px;
+    background-color: #f0f0f0;
+}
+
+/* ----------------------------------
+   3. BẢNG LỊCH SỬ GIAO DỊCH
+----------------------------------- */
+.history-section {
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-left: 4px solid #1890ff; /* Thanh line màu xanh đánh dấu tiêu đề */
+    padding-left: 12px;
+}
+
+.tx-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tx-table th, .tx-table td {
+    padding: 16px; /* Bảng rộng rãi hơn */
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tx-table th {
+    background-color: #fafafa;
+    color: #595959;
+    font-weight: 600;
+}
+
+/* Hiệu ứng highlight khi hover vào 1 dòng giao dịch */
+.tx-table tbody tr:hover {
+    background-color: #f9fbfd;
+}
+
+.amount-text {
+    font-weight: bold;
+}
+.amount-text.plus { color: #52c41a; }
+.amount-text.minus { color: #ff4d4f; }

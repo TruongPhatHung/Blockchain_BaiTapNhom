@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/accounts")
-@CrossOrigin(origins = "*")
+
 public class AccountController {
 
     @Autowired

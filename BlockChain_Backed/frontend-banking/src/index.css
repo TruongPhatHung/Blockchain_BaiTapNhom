@@ -50,20 +50,21 @@
   }
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%; /* Dùng 100% thay vì 100vw để không dính thanh cuộn */
+  height: 100%;
+  overflow-x: hidden; 
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  /* Mình đã xóa đi dòng width: 1126px, margin: 0 auto và border-inline gây lỗi */
 }
 
 h1,

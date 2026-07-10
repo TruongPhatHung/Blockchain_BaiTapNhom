@@ -1,0 +1,95 @@
+/* src/pages/Admin/LedgerExplorer.css */
+.ledger-container {
+    background-color: transparent;
+    padding: 20px 0;
+}
+
+.ledger-title {
+    font-size: 24px;
+    color: #001529;
+    margin-bottom: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.blockchain-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Khối Block */
+.block-card {
+    background-color: white;
+    width: 100%;
+    max-width: 700px;
+    border-radius: 8px;
+    border-left: 5px solid #1890ff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+    position: relative;
+}
+
+/* Mũi tên liên kết giữa các khối (trừ khối cuối) */
+.block-card:not(:last-child)::after {
+    content: '⬇';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #1890ff;
+}
+
+.block-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.block-index {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1890ff;
+}
+
+.block-time {
+    color: #8c8c8c;
+    font-size: 14px;
+}
+
+.block-data-row {
+    margin-bottom: 10px;
+    font-family: monospace; /* Dùng font monospace cho Hash để dễ nhìn */
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.hash-label {
+    font-weight: bold;
+    color: #333;
+    display: inline-block;
+    width: 120px;
+}
+
+.hash-value {
+    color: #555;
+    background-color: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.tx-count {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #e6f7ff;
+    color: #0050b3;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+}

@@ -1,0 +1,56 @@
+// src/routes/AppRoutes.jsx
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import AuthLayout from '../layouts/AuthLayout';
+import Login from '../pages/Auth/Login';
+import UserLayout from '../layouts/UserLayout';
+import Dashboard from '../pages/User/Dashboard';
+import Transfer from '../pages/User/Transfer';
+import History from '../pages/User/History';
+import BillPay from '../pages/User/BillPay';
+import AdminLayout from '../layouts/AdminLayout';
+import ManageUsers from '../pages/Staff/ManageUsers';
+import SupportTickets from '../pages/Staff/SupportTickets';
+import Refund from '../pages/Staff/Refund'; // Import trang Refund cho Staff
+
+// --- IMPORT CHO ADMIN ---
+import LedgerExplorer from '../pages/Admin/LedgerExplorer';
+import VerifyBlockchain from '../pages/Admin/VerifyBlockchain';
+
+import PrivateRoute from './PrivateRoute';
+
+const AppRoutes = () => {
+    return (
+        <Routes>
+            <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+            </Route>
+
+            {/* LUỒNG USER (Khách Hàng) */}
+            <Route path="/" element={<PrivateRoute allowedRoles={['USER']}><UserLayout /></PrivateRoute>}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="transfer" element={<Transfer />} />
+                <Route path="history" element={<History />} />
+                <Route path="bill-pay" element={<BillPay />} />
+            </Route>
+
+            {/* LUỒNG STAFF (Nhân Viên) */}
+            <Route path="/staff" element={<PrivateRoute allowedRoles={['STAFF']}><AdminLayout /></PrivateRoute>}>
+                <Route path="users" element={<ManageUsers />} />
+                <Route path="refund" element={<Refund />} /> {/* Khai báo đường dẫn xử lý hoàn tác */}
+                <Route path="tickets" element={<SupportTickets />} />
+                
+            </Route>
+
+            {/* LUỒNG ADMIN (Quản Trị Viên) */}
+            <Route path="/admin" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminLayout /></PrivateRoute>}>
+                <Route path="ledger" element={<LedgerExplorer />} />
+                <Route path="audit" element={<VerifyBlockchain />} /> {/* Thay Audit bằng Verify cho khớp menu */}
+            </Route>
+
+            <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+    );
+};
+
+export default AppRoutes;

@@ -1,0 +1,105 @@
+/* src/pages/User/Transfer.css */
+.transfer-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    max-width: 500px; /* Căn giữa và thu gọn form cho đẹp */
+    margin: 40px auto;
+}
+
+.transfer-title {
+    text-align: center;
+    color: #001529;
+    margin-bottom: 25px;
+    font-size: 22px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box; /* Đảm bảo padding không làm tràn width */
+    transition: all 0.3s;
+}
+
+.form-input:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    outline: none;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.submit-btn:hover {
+    background-color: #40a9ff;
+}
+
+.submit-btn:disabled {
+    background-color: #d9d9d9;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #ff4d4f;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* Giao diện khi chuyển tiền thành công */
+.success-screen {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.success-icon {
+    font-size: 60px;
+    color: #52c41a;
+    margin-bottom: 15px;
+}
+
+.success-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.new-transfer-btn {
+    background-color: white;
+    color: #1890ff;
+    border: 1px solid #1890ff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.new-transfer-btn:hover {
+    background-color: #e6f7ff;
+}

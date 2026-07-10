@@ -1,0 +1,127 @@
+/* src/pages/Staff/Refund.css */
+.refund-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.refund-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.refund-title {
+    font-size: 22px;
+    color: #001529;
+    margin: 0;
+}
+
+/* Thanh tìm kiếm mã giao dịch cần tra soát */
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    max-width: 500px;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #1890ff;
+}
+
+.btn-search {
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-search:hover {
+    background-color: #0050b3;
+}
+
+/* Khu vực hiển thị thông tin chi tiết giao dịch lỗi */
+.tx-detail-card {
+    background-color: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.tx-detail-title {
+    margin-top: 0;
+    color: #262626;
+    font-size: 16px;
+    border-bottom: 1px solid #e8e8e8;
+    padding-bottom: 10px;
+}
+
+.tx-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.tx-info-item {
+    font-size: 14px;
+}
+
+.tx-info-item span {
+    font-weight: bold;
+    color: #555;
+}
+
+/* Khu vực nút bấm tạo lệnh Hoàn tác / Đền bù */
+.action-group {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-action {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* Nút hoàn tác (Rollback tiền về tài khoản cũ) */
+.btn-refund-trigger {
+    background-color: #fff7e6;
+    color: #fa8c16;
+    border: 1px solid #ffd591;
+}
+
+.btn-refund-trigger:hover {
+    background-color: #fa8c16;
+    color: white;
+}
+
+/* Nút đền bù (Khởi tạo yêu cầu đền bù thiệt hại) */
+.btn-compensate-trigger {
+    background-color: #fff1f0;
+    color: #f5222d;
+    border: 1px solid #ffa39e;
+}
+
+.btn-compensate-trigger:hover {
+    background-color: #f5222d;
+    color: white;
+}

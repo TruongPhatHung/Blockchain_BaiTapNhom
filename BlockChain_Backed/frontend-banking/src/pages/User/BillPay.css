@@ -1,0 +1,47 @@
+/* src/pages/User/BillPay.css */
+.bill-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.bill-title {
+    text-align: center;
+    color: #001529;
+    margin-bottom: 25px;
+}
+
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.service-card {
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 20px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.service-card:hover {
+    border-color: #91d5ff;
+}
+
+.service-card.selected {
+    border-color: #1890ff;
+    background-color: #e6f7ff;
+    color: #1890ff;
+    font-weight: bold;
+}
+
+.service-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+}

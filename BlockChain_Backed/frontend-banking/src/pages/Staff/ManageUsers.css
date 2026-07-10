@@ -1,0 +1,59 @@
+/* src/pages/Staff/ManageUsers.css */
+.manage-users-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.manage-users-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.manage-users-title {
+    font-size: 22px;
+    color: #001529;
+    margin: 0;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.users-table th {
+    background-color: #fafafa;
+    color: #595959;
+    font-weight: 600;
+}
+
+.users-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.btn-status {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+
+.btn-lock { background-color: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+.btn-lock:hover { background-color: #ff4d4f; color: white; }
+
+.btn-unlock { background-color: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+.btn-unlock:hover { background-color: #52c41a; color: white; }
+
+.status-active { color: #52c41a; font-weight: bold; }
+.status-locked { color: #ff4d4f; font-weight: bold; }

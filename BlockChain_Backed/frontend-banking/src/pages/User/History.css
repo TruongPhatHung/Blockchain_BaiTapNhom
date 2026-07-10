@@ -1,0 +1,72 @@
+/* src/pages/User/History.css */
+.history-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.history-title {
+    font-size: 22px;
+    color: #001529;
+    margin: 0;
+}
+
+.history-table-wrapper {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.history-table th {
+    background-color: #fafafa;
+    color: #595959;
+    font-weight: 600;
+}
+
+.history-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.type-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.type-badge.transfer { background-color: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+.type-badge.deposit { background-color: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+.type-badge.bill { background-color: #fff2e8; color: #fa541c; border: 1px solid #ffbb96; }
+
+.amt-positive {
+    color: #52c41a;
+    font-weight: bold;
+}
+
+.amt-negative {
+    color: #ff4d4f;
+    font-weight: bold;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #8c8c8c;
+}

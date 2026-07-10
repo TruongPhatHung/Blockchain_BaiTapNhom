@@ -1,0 +1,94 @@
+/* Xóa bỏ khoảng trắng và cấu hình mặc định của trình duyệt/Vite */
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100% !important; /* Ghi đè giới hạn 1280px của Vite */
+}
+
+/* KHUNG NỀN TOÀN MÀN HÌNH */
+.auth-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f4f8; /* Màu nền xám/xanh nhạt, sạch sẽ */
+}
+
+/* HỘP ĐĂNG NHẬP Ở GIỮA */
+.auth-box {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* TIÊU ĐỀ */
+.auth-title {
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Ô NHẬP LIỆU */
+.auth-input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* NÚT BẤM */
+.auth-button {
+    width: 100%;
+    padding: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.auth-button:hover {
+    background-color: #0056b3;
+}
+
+.auth-button:active {
+    transform: scale(0.98); /* Hiệu ứng lún xuống khi click */
+}
+
+/* THÔNG BÁO LỖI */
+.auth-error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

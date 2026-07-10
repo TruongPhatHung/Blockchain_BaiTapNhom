@@ -1,0 +1,82 @@
+/* src/layouts/AdminLayout.css */
+.admin-layout {
+    display: flex;
+    height: 100vh;
+    background-color: #f4f6f9;
+}
+
+.admin-sidebar {
+    width: 260px;
+    background-color: #001529;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.admin-sidebar-logo {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #002140;
+    color: #1890ff;
+}
+
+.admin-sidebar-menu {
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.admin-sidebar-item {
+    padding: 15px 25px;
+    cursor: pointer;
+    display: block;
+    color: #a6adb4;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.admin-sidebar-item:hover, .admin-sidebar-item.active {
+    color: white;
+    background-color: #1890ff;
+}
+
+.admin-logout-btn {
+    padding: 15px 25px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.admin-main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.admin-main-header {
+    background-color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.admin-user-info {
+    font-weight: bold;
+    color: #333;
+}
+
+.admin-content-body {
+    padding: 30px;
+}
