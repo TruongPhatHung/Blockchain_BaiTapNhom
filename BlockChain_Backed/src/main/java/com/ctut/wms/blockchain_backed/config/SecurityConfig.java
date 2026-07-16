@@ -48,7 +48,8 @@ public class SecurityConfig {
 
                         // Cả STAFF và ADMIN đều có thể truy cập API của nhân viên
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
-
+                        .requestMatchers("/api/users/**")
+                        .hasAnyRole("USER", "STAFF", "ADMIN")
                         // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
                         // BỔ SUNG: Thêm các endpoint mới cho thông báo, user, danh bạ
                         .requestMatchers(

@@ -3,6 +3,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../store/AuthContext';
 import { ArrowLeft, Save, User, Mail, Phone } from 'lucide-react';
+import api from "../../services/api"; // 🔥 thêm dòng này
 import './EditProfile.css';
 
 const EditProfile = () => {
@@ -26,7 +27,7 @@ const EditProfile = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!user?.username) {
             alert("Không xác định được thông tin người dùng!");
             return;
@@ -35,36 +36,33 @@ const EditProfile = () => {
         setLoading(true);
 
         try {
-            // Gọi API Put cụ thể: /api/users/{username}/settings
-            const response = await fetch(`http:///10.10.34.125:8080/api/users/${user.username}/settings`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Gửi JWT token nếu có cấu hình Spring Security
-                },
-                body: JSON.stringify(formData)
-            });
+            const response = await api.put(
+                `/users/${user.username}/settings`,
+                formData
+            );
 
-            if (response.ok) {
-                const updatedUserFromDB = await response.json();
-                
-                // Đồng bộ cập nhật thông tin mới vào Context cục bộ để các trang khác thay đổi theo
-                updateUser(updatedUserFromDB);
+            const updatedUserFromDB = response.data;
 
-                alert('Cập nhật thông tin cá nhân thành công!');
-                navigate('/settings'); // Quay về trang cài đặt
-            } else {
-                const errorText = await response.text();
-                alert('Cập nhật thất bại: ' + errorText);
-            }
+            // cập nhật context
+            updateUser(updatedUserFromDB);
+
+            alert("Cập nhật thông tin cá nhân thành công!");
+            navigate("/settings");
+
         } catch (error) {
-            console.error('Lỗi kết nối API:', error);
-            alert('Không thể kết nối đến máy chủ. Hãy kiểm tra Backend Spring Boot!');
+            console.error("Lỗi:", error);
+
+            if (error.response) {
+                // lỗi từ backend (403, 401, 500...)
+                alert("Cập nhật thất bại: " + error.response.data);
+            } else {
+                // lỗi mạng
+                alert("Không thể kết nối đến server!");
+            }
         } finally {
             setLoading(false);
         }
     };
-
     return (
         <div className="edit-profile-container">
             <button className="ep-back-btn" onClick={() => navigate('/settings')} disabled={loading}>

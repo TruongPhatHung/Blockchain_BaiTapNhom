@@ -1,5 +1,5 @@
 package com.ctut.wms.blockchain_backed.controller;
-
+import org.springframework.security.core.Authentication;
 import com.ctut.wms.blockchain_backed.entity.User;
 import com.ctut.wms.blockchain_backed.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,11 @@ public class UserController {
 
     // API: Cập nhật thông tin Cài đặt (Settings) từ Frontend gửi lên
     @PutMapping("/{username}/settings")
-    public ResponseEntity<?> updateUserSettings(@PathVariable String username, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> updateUserSettings(
+            @PathVariable String username,
+            @RequestBody Map<String, Object> updates,
+            Authentication authentication
+    ) {
         try {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
