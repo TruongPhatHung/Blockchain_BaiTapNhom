@@ -57,7 +57,7 @@ public class TransactionService {
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("CHUYEN_TIEN");
         newTransaction.setDescription(description);
-
+        newTransaction.setStatus("PENDING");
         // Sử dụng thời gian hiện tại
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);
@@ -82,6 +82,31 @@ public class TransactionService {
 
         // 8. Lưu khối mới vào CSDL (Hoàn tất giao dịch)
         return transactionRepository.save(newTransaction);
+    }
+    @Transactional
+    public Transaction confirmTransaction(Long transactionId, String onChainTxHash) {
+        Transaction tx = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch"));
+
+        if (!"PENDING".equals(tx.getStatus())) {
+            throw new RuntimeException("Giao dịch này đã được xử lý!");
+        }
+
+        // BÂY GIỜ MỚI TIẾN HÀNH TRỪ VÀ CỘNG TIỀN THỰC TẾ
+        Account sender = accountRepository.findByAccountNumber(tx.getSenderAccount()).get();
+        Account receiver = accountRepository.findByAccountNumber(tx.getReceiverAccount()).get();
+
+        sender.setBalance(sender.getBalance().subtract(tx.getAmount()));
+        receiver.setBalance(receiver.getBalance().add(tx.getAmount()));
+
+        accountRepository.save(sender);
+        accountRepository.save(receiver);
+
+        // Cập nhật trạng thái thành công
+        tx.setStatus("SUCCESS");
+        tx.setOnChainTxHash(onChainTxHash); // Lưu bằng chứng giao dịch MetaMask
+
+        return transactionRepository.save(tx);
     }
     /**
      * Hàm chạy kiểm tra tính toàn vẹn của toàn bộ sổ cái (Dành cho Admin)
@@ -145,6 +170,7 @@ public class TransactionService {
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("NAP_TIEN");
         newTransaction.setDescription(description);
+        newTransaction.setStatus("SUCCESS");// Nạp tiền nội bộ thành công luôn
 
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);
@@ -168,6 +194,7 @@ public class TransactionService {
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactionRepository.findBySenderAccountOrReceiverAccountOrderByTimestampDesc(accountNumber, accountNumber);
     }
+    /**THANH TOÁN HÓA ĐƠN*/
     @Transactional
     public Transaction payBill(String senderAccountNumber, String billerCode, BigDecimal amount, String billType, String description) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -192,6 +219,7 @@ public class TransactionService {
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType(billType); // 'TIEN_DIEN', 'TIEN_NUOC', 'NAP_4G'...
         newTransaction.setDescription(description);
+        newTransaction.setStatus("SUCCESS"); // Hóa đơn xử lý nội bộ thành công luôn
 
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);

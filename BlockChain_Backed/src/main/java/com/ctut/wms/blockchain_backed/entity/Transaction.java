@@ -38,4 +38,11 @@ public class Transaction {
 
     @Column(nullable = false, length = 64)
     private String blockHash;
+
+    //Trạng thái giao dịch
+    @Column(length = 20, nullable = false)
+    private String status = "PENDING";
+    //Mã giao dịch thật trên mạng lưới Blockchain công khai
+    @Column(name = "on_chain_tx_hash", length = 100)
+    private String onChainTxHash;
 }
