@@ -22,7 +22,7 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    // Annotation @Transactional đảm bảo nếu có lỗi ở bất kỳ bước nào, toàn bộ quá trình sẽ bị hủy (Rollback)
+    // BƯỚC 1: TẠO GIAO DỊCH CHỜ KÝ METAMASK (KHÔNG TRỪ TIỀN)
     @Transactional
     public Transaction transferMoney(String senderAccountNumber, String receiverAccountNumber, BigDecimal amount, String description) {
 
@@ -38,38 +38,33 @@ public class TransactionService {
         Account receiver = accountRepository.findByAccountNumber(receiverAccountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người nhận"));
 
-        // 3. Kiểm tra số dư người gửi
+        // 3. Chỉ kiểm tra xem có đủ số dư không, TUYỆT ĐỐI KHÔNG TRỪ TIỀN Ở ĐÂY
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Số dư không đủ để thực hiện giao dịch");
         }
 
-        // 4. Cập nhật số dư (Off-chain)
-        sender.setBalance(sender.getBalance().subtract(amount));
-        receiver.setBalance(receiver.getBalance().add(amount));
+        // LƯU Ý: ĐÃ XÓA BƯỚC TRỪ TIỀN VÀ LƯU ACCOUNT Ở ĐÂY ĐỂ TRÁNH LỖI TRỪ 2 LẦN
 
-        accountRepository.save(sender);
-        accountRepository.save(receiver);
-
-        // 5. Khởi tạo dữ liệu giao dịch mới (On-chain)
+        // 4. Khởi tạo dữ liệu giao dịch mới (On-chain)
         Transaction newTransaction = new Transaction();
         newTransaction.setSenderAccount(senderAccountNumber);
         newTransaction.setReceiverAccount(receiverAccountNumber);
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("CHUYEN_TIEN");
         newTransaction.setDescription(description);
-        newTransaction.setStatus("PENDING");
-        // Sử dụng thời gian hiện tại
+        newTransaction.setStatus("PENDING"); // Đang chờ MetaMask
+
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);
 
-        // 6. Lấy mã băm của khối (giao dịch) cuối cùng để làm sợi xích nối
+        // 5. Lấy mã băm của khối (giao dịch) cuối cùng để làm sợi xích nối
         Transaction lastTransaction = transactionRepository.findLastTransaction()
                 .orElseThrow(() -> new RuntimeException("Hệ thống chưa có khối Khởi nguồn (Genesis Block)"));
 
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        // 7. Đào khối: Tính toán mã băm cho giao dịch mới này
+        // 6. Đào khối: Tính toán mã băm cho giao dịch mới này
         String newBlockHash = BlockchainUtil.calculateHash(
                 senderAccountNumber,
                 receiverAccountNumber,
@@ -80,9 +75,11 @@ public class TransactionService {
 
         newTransaction.setBlockHash(newBlockHash);
 
-        // 8. Lưu khối mới vào CSDL (Hoàn tất giao dịch)
+        // 7. Lưu hóa đơn chờ vào CSDL
         return transactionRepository.save(newTransaction);
     }
+
+    // BƯỚC 2: METAMASK BÁO THÀNH CÔNG -> TIẾN HÀNH TRỪ TIỀN
     @Transactional
     public Transaction confirmTransaction(Long transactionId, String onChainTxHash) {
         Transaction tx = transactionRepository.findById(transactionId)
@@ -108,26 +105,22 @@ public class TransactionService {
 
         return transactionRepository.save(tx);
     }
+
     /**
      * Hàm chạy kiểm tra tính toàn vẹn của toàn bộ sổ cái (Dành cho Admin)
      */
     public boolean verifyBlockchainIntegrity() {
-        // Lấy tất cả giao dịch sắp xếp theo thứ tự ID tăng dần (từ cũ đến mới)
         List<Transaction> chain = transactionRepository.findAll(org.springframework.data.domain.Sort.by("transactionId").ascending());
 
-        // Bỏ qua khối đầu tiên (Genesis Block), bắt đầu kiểm tra từ khối số 1
         for (int i = 1; i < chain.size(); i++) {
             Transaction currentBlock = chain.get(i);
             Transaction previousBlock = chain.get(i - 1);
 
-            // Kiểm tra 1: Móc xích có bị đứt không?
             if (!currentBlock.getPreviousHash().equals(previousBlock.getBlockHash())) {
                 System.out.println("CẢNH BÁO: Lỗi móc xích tại khối ID: " + currentBlock.getTransactionId());
                 return false;
             }
 
-            // Kiểm tra 2: Dữ liệu bên trong có bị sửa đổi lén lút không?
-            // Tiến hành băm lại dữ liệu hiện tại đang nằm dưới database
             String recalculatedHash = BlockchainUtil.calculateHash(
                     currentBlock.getSenderAccount(),
                     currentBlock.getReceiverAccount(),
@@ -136,7 +129,6 @@ public class TransactionService {
                     currentBlock.getPreviousHash()
             );
 
-            // Nếu mã băm tính lại KHÔNG khớp với mã băm đã lưu -> Bị hack!
             if (!currentBlock.getBlockHash().equals(recalculatedHash)) {
                 System.out.println("CẢNH BÁO: Dữ liệu đã bị thay đổi trái phép tại khối ID: " + currentBlock.getTransactionId());
                 return false;
@@ -159,18 +151,16 @@ public class TransactionService {
         Account receiver = accountRepository.findByAccountNumber(receiverAccountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người nhận"));
 
-        // Cộng tiền cho người nhận
         receiver.setBalance(receiver.getBalance().add(amount));
         accountRepository.save(receiver);
 
-        // Tạo khối giao dịch mới
         Transaction newTransaction = new Transaction();
-        newTransaction.setSenderAccount("SYSTEM_DEPOSIT"); // Người gửi là Hệ thống
+        newTransaction.setSenderAccount("SYSTEM_DEPOSIT");
         newTransaction.setReceiverAccount(receiverAccountNumber);
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("NAP_TIEN");
         newTransaction.setDescription(description);
-        newTransaction.setStatus("SUCCESS");// Nạp tiền nội bộ thành công luôn
+        newTransaction.setStatus("SUCCESS"); // Nạp tiền nội bộ thành công luôn
 
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);
@@ -181,7 +171,6 @@ public class TransactionService {
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        // Đào khối
         String newBlockHash = BlockchainUtil.calculateHash("SYSTEM_DEPOSIT", receiverAccountNumber, amount.toString(), now.toString(), previousHash);
         newTransaction.setBlockHash(newBlockHash);
 
@@ -194,6 +183,7 @@ public class TransactionService {
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactionRepository.findBySenderAccountOrReceiverAccountOrderByTimestampDesc(accountNumber, accountNumber);
     }
+
     /**THANH TOÁN HÓA ĐƠN*/
     @Transactional
     public Transaction payBill(String senderAccountNumber, String billerCode, BigDecimal amount, String billType, String description) {
@@ -208,16 +198,14 @@ public class TransactionService {
             throw new RuntimeException("Số dư không đủ để thanh toán hóa đơn");
         }
 
-        // Trừ tiền người gửi (Tiền chuyển vào tài khoản định danh của nhà cung cấp)
         sender.setBalance(sender.getBalance().subtract(amount));
         accountRepository.save(sender);
 
-        // Tạo khối giao dịch thanh toán
         Transaction newTransaction = new Transaction();
         newTransaction.setSenderAccount(senderAccountNumber);
-        newTransaction.setReceiverAccount("BILLER_" + billerCode); // Mã nhà cung cấp
+        newTransaction.setReceiverAccount("BILLER_" + billerCode);
         newTransaction.setAmount(amount);
-        newTransaction.setTransactionType(billType); // 'TIEN_DIEN', 'TIEN_NUOC', 'NAP_4G'...
+        newTransaction.setTransactionType(billType);
         newTransaction.setDescription(description);
         newTransaction.setStatus("SUCCESS"); // Hóa đơn xử lý nội bộ thành công luôn
 
