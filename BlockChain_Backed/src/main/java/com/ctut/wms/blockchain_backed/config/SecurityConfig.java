@@ -37,25 +37,28 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 // Kích hoạt cấu hình CORS bên dưới
-                //.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 // Tắt CSRF vì chúng ta dùng API (JWT Token) thay vì Session Cookie
                 .csrf(csrf -> csrf.disable())
+
                 // Cấu hình không lưu Session (Stateless) phù hợp với REST API
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 // Cấu hình phân quyền cho từng đường dẫn API
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép tất cả mọi người truy cập API auth (Đăng nhập, Đăng ký)
-                        .requestMatchers("/api/auth/**").permitAll().requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
 
-//                        // Chỉ ADMIN mới được truy cập các API bắt đầu bằng /api/admin/
+                        // Chỉ ADMIN mới được truy cập các API bắt đầu bằng /api/admin/
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-//
-//                        // Cả STAFF và ADMIN đều có thể truy cập API của nhân viên
-//                        .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
-//
-//                        // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
-//                        .requestMatchers("/api/user/**").hasAnyRole("USER", "STAFF", "ADMIN")
-                                .requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
+
+                        // Cả STAFF và ADMIN đều có thể truy cập API của nhân viên
+                        .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
+
+                        // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
+                        // Đã bổ sung thêm các đường dẫn giao dịch và thống kê của hệ thống ngân hàng
+                        .requestMatchers("/api/user/**", "/api/transactions/**", "/api/statistics/**").hasAnyRole("USER", "STAFF", "ADMIN")
 
                         // Bất kỳ Request nào khác ngoài các mục trên đều bắt buộc phải đăng nhập
                         .anyRequest().authenticated()
