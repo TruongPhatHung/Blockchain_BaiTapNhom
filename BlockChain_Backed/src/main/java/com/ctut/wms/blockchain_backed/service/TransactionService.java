@@ -24,8 +24,8 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    // BƯỚC 1: TẠO GIAO DỊCH CHỜ KÝ METAMASK (KHÔNG TRỪ TIỀN)
-    // BƯỚC 1: TẠO GIAO DỊCH CHỜ KÝ METAMASK (ĐÃ CẬP NHẬT CATEGORY & BANK NAME)
+
+    // TẠO GIAO DỊCH CHỜ KÝ METAMASK CẬP NHẬT CATEGORY & BANK NAME
     @Transactional
     public Transaction transferMoney(String senderAccountNumber, String receiverAccountNumber, String receiverBankName, BigDecimal amount, String category, String description) {
 
@@ -89,7 +89,7 @@ public class TransactionService {
         return transactionRepository.save(newTransaction);
     }
 
-    // BƯỚC 2: METAMASK BÁO THÀNH CÔNG -> TIẾN HÀNH TRỪ TIỀN
+    //  METAMASK BÁO THÀNH CÔNG -> TIẾN HÀNH TRỪ TIỀN
     @Transactional
     public Transaction confirmTransaction(Long transactionId, String onChainTxHash) {
         Transaction tx = transactionRepository.findById(transactionId)
