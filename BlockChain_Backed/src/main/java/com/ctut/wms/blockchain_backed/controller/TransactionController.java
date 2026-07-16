@@ -28,22 +28,37 @@ public class TransactionController {
      * POST /api/transactions/transfer
      */
     @PostMapping("/transfer")
-    public ResponseEntity<?> transferMoney(@RequestBody TransferRequest request) {
+    public ResponseEntity<?> transferMoney(@RequestBody Map<String, Object> requestData) {
         try {
-            // Gọi Service để xử lý nghiệp vụ trừ tiền và tạo khối
-            Transaction newBlock = transactionService.transferMoney(
-                    request.getSenderAccountNumber(),
-                    request.getReceiverAccountNumber(),
-                    request.getAmount(),
-                    request.getDescription()
+            // 1. Trích xuất dữ liệu cũ
+            String senderAccount = requestData.get("senderAccountNumber").toString();
+            String receiverAccount = requestData.get("receiverAccountNumber").toString();
+            BigDecimal amount = new BigDecimal(requestData.get("amount").toString());
+            String description = requestData.get("description").toString();
+
+            // 2. Trích xuất 2 dữ liệu MỚI (Có xử lý null an toàn nếu web quên gửi)
+            String receiverBankName = requestData.containsKey("receiverBankName") ?
+                    requestData.get("receiverBankName").toString() : "Lumina Bank";
+
+            String category = requestData.containsKey("category") ?
+                    requestData.get("category").toString() : "OTHER";
+
+            // 3. Gọi xuống Service với đầy đủ tham số mới
+            Transaction transaction = transactionService.transferMoney(
+                    senderAccount,
+                    receiverAccount,
+                    receiverBankName,
+                    amount,
+                    category,
+                    description
             );
 
-            // Nếu thành công, trả về khối giao dịch vừa tạo
-            return ResponseEntity.ok(newBlock);
+            // Trả về kết quả thành công cho ReactJS
+            return ResponseEntity.ok(transaction);
 
         } catch (Exception e) {
-            // Nếu có lỗi (VD: không đủ số dư), trả về mã lỗi 400 và thông báo
-            return ResponseEntity.badRequest().body(e.getMessage());
+            // Trả về lỗi nếu có (ví dụ: Không đủ tiền, Sai tài khoản...)
+            return ResponseEntity.badRequest().body("Lỗi giao dịch: " + e.getMessage());
         }
     }
 

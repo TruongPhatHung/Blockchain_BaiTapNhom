@@ -3,6 +3,7 @@ package com.ctut.wms.blockchain_backed.service;
 import com.ctut.wms.blockchain_backed.entity.Account;
 import com.ctut.wms.blockchain_backed.entity.Transaction;
 import com.ctut.wms.blockchain_backed.repository.AccountRepository;
+import com.ctut.wms.blockchain_backed.repository.NotificationRepository;
 import com.ctut.wms.blockchain_backed.repository.TransactionRepository;
 import com.ctut.wms.blockchain_backed.util.BlockchainUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,37 +19,46 @@ public class TransactionService {
 
     @Autowired
     private AccountRepository accountRepository;
-
+    @Autowired
+    private NotificationRepository notificationRepository;
     @Autowired
     private TransactionRepository transactionRepository;
 
     // BƯỚC 1: TẠO GIAO DỊCH CHỜ KÝ METAMASK (KHÔNG TRỪ TIỀN)
+    // BƯỚC 1: TẠO GIAO DỊCH CHỜ KÝ METAMASK (ĐÃ CẬP NHẬT CATEGORY & BANK NAME)
     @Transactional
-    public Transaction transferMoney(String senderAccountNumber, String receiverAccountNumber, BigDecimal amount, String description) {
+    public Transaction transferMoney(String senderAccountNumber, String receiverAccountNumber, String receiverBankName, BigDecimal amount, String category, String description) {
 
         // 1. Kiểm tra số tiền hợp lệ
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Số tiền giao dịch phải lớn hơn 0");
         }
 
-        // 2. Tìm tài khoản người gửi và người nhận trong DB
+        // 2. Tìm tài khoản người gửi
         Account sender = accountRepository.findByAccountNumber(senderAccountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người gửi"));
 
-        Account receiver = accountRepository.findByAccountNumber(receiverAccountNumber)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người nhận"));
+        // 3. Xử lý người nhận tùy theo loại hình chuyển khoản
+        if (receiverBankName == null || receiverBankName.equalsIgnoreCase("Lumina Bank")) {
+            // Nếu là chuyển nội bộ: Bắt buộc phải tìm thấy người nhận trong Database
+            accountRepository.findByAccountNumber(receiverAccountNumber)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người nhận nội bộ"));
+        }
 
-        // 3. Chỉ kiểm tra xem có đủ số dư không, TUYỆT ĐỐI KHÔNG TRỪ TIỀN Ở ĐÂY
+        // 4. Kiểm tra số dư người gửi (Không trừ tiền ở bước này)
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Số dư không đủ để thực hiện giao dịch");
         }
 
-        // LƯU Ý: ĐÃ XÓA BƯỚC TRỪ TIỀN VÀ LƯU ACCOUNT Ở ĐÂY ĐỂ TRÁNH LỖI TRỪ 2 LẦN
-
-        // 4. Khởi tạo dữ liệu giao dịch mới (On-chain)
+        // 5. Khởi tạo dữ liệu giao dịch mới (On-chain)
         Transaction newTransaction = new Transaction();
         newTransaction.setSenderAccount(senderAccountNumber);
         newTransaction.setReceiverAccount(receiverAccountNumber);
+
+        // --- HAI TRƯỜNG DỮ LIỆU MỚI ---
+        newTransaction.setReceiverBankName(receiverBankName); // Lưu tên ngân hàng
+        newTransaction.setCategory(category);                 // Lưu danh mục chi tiêu (VD: SHOPPING, FOOD)
+
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("CHUYEN_TIEN");
         newTransaction.setDescription(description);
@@ -57,14 +67,14 @@ public class TransactionService {
         LocalDateTime now = LocalDateTime.now();
         newTransaction.setTimestamp(now);
 
-        // 5. Lấy mã băm của khối (giao dịch) cuối cùng để làm sợi xích nối
+        // 6. Lấy mã băm của khối cuối cùng
         Transaction lastTransaction = transactionRepository.findLastTransaction()
                 .orElseThrow(() -> new RuntimeException("Hệ thống chưa có khối Khởi nguồn (Genesis Block)"));
 
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        // 6. Đào khối: Tính toán mã băm cho giao dịch mới này
+        // 7. Đào khối: Tính toán mã băm
         String newBlockHash = BlockchainUtil.calculateHash(
                 senderAccountNumber,
                 receiverAccountNumber,
@@ -75,7 +85,7 @@ public class TransactionService {
 
         newTransaction.setBlockHash(newBlockHash);
 
-        // 7. Lưu hóa đơn chờ vào CSDL
+        // 8. Lưu hóa đơn chờ vào CSDL
         return transactionRepository.save(newTransaction);
     }
 
@@ -102,6 +112,14 @@ public class TransactionService {
         // Cập nhật trạng thái thành công
         tx.setStatus("SUCCESS");
         tx.setOnChainTxHash(onChainTxHash); // Lưu bằng chứng giao dịch MetaMask
+
+        com.ctut.wms.blockchain_backed.entity.Notification notification = new com.ctut.wms.blockchain_backed.entity.Notification();
+        notification.setUser(receiver.getUser()); // Gắn thông báo này cho chủ tài khoản nhận
+        notification.setTitle("Biến động số dư");
+        notification.setMessage("Tài khoản " + receiver.getAccountNumber() + " vừa nhận được +" + tx.getAmount() + " VND từ " + sender.getAccountNumber());
+        notification.setIsRead(false); // Trạng thái chưa đọc
+
+        notificationRepository.save(notification);
 
         return transactionRepository.save(tx);
     }

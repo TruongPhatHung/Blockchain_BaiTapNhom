@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/mini_banking_blockchain
     username: postgres
-    password: 12345 # Đổi thành mật khẩu PostgreSQL thực tế của bạn
+    password: 123456 # Đổi thành mật khẩu PostgreSQL thực tế của bạn
     driver-class-name: org.postgresql.Driver
 
   jpa:
