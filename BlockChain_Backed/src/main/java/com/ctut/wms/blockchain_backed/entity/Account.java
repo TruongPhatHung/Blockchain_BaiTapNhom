@@ -29,7 +29,12 @@ public class Account {
 
     @Column(length = 50)
     private String accountType = "THANH_TOAN"; // 'THANH_TOAN' hoặc 'TIET_KIEM'
+    @Column(unique = true, length = 19) // Chiều dài chuẩn của thẻ VISA/MasterCard (bao gồm khoảng trắng)
+    private String cardNumber;
+
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+
 }

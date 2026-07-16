@@ -23,6 +23,9 @@ public class StaffController {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private com.ctut.wms.blockchain_backed.service.TransactionService transactionService;
+
     // API: Xem danh sách toàn bộ khách hàng
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -57,8 +60,6 @@ public class StaffController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @Autowired
-    private com.ctut.wms.blockchain_backed.service.TransactionService transactionService;
 
     // API: Nhân viên tạo lệnh hoàn tác (Đền bù giao dịch lỗi)
     @PostMapping("/transactions/reverse")
@@ -73,11 +74,17 @@ public class StaffController {
 
             String description = "LỆNH HOÀN TÁC cho giao dịch lỗi ID: " + errorTxId;
 
-            // Gọi TransactionService để thực hiện chuyển tiền ngược lại
+            // --- BỔ SUNG THÊM 2 THAM SỐ ĐỂ KHỚP VỚI TRANSACTION SERVICE ---
+            String receiverBankName = "Lumina Bank"; // Hoàn tiền nội bộ
+            String category = "HOAN_TIEN";           // Phân loại danh mục
+
+            // Gọi TransactionService để thực hiện chuyển tiền ngược lại với ĐẦY ĐỦ 6 THAM SỐ
             com.ctut.wms.blockchain_backed.entity.Transaction reversedBlock = transactionService.transferMoney(
                     senderToReverse,
                     receiverToCredit,
+                    receiverBankName,
                     amountToReverse,
+                    category,
                     description
             );
 
@@ -86,6 +93,4 @@ public class StaffController {
             return ResponseEntity.badRequest().body("Không thể hoàn tác: " + e.getMessage());
         }
     }
-
-
 }
