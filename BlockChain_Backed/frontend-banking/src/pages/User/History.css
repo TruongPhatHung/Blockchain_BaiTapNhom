@@ -1,72 +1,265 @@
 /* src/pages/User/History.css */
-.history-container {
-    background-color: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+
+.history-wrapper {
+    padding: 24px;
+    background-color: #f8f9fa; /* Màu nền xám nhạt giúp nổi bật khối trắng */
+    min-height: 100vh;
 }
 
+.history-container {
+    background-color: transparent;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Header */
 .history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 24px;
 }
 
 .history-title {
-    font-size: 22px;
-    color: #001529;
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.history-subtitle {
+    color: #6b7280;
+    font-size: 15px;
     margin: 0;
 }
 
-.history-table-wrapper {
-    overflow-x: auto;
+/* Filters Section */
+.filter-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    margin-bottom: 24px;
 }
 
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.history-table th, .history-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #f0f0f0;
+.filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
 }
 
-.history-table th {
-    background-color: #fafafa;
-    color: #595959;
+.filter-buttons {
+    display: flex;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.filter-buttons.outline {
+    background-color: transparent;
+    padding: 0;
+    gap: 8px;
+}
+
+.btn-filter {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-filter.with-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-filter:hover {
+    color: #111827;
+}
+
+.btn-filter.active {
+    background-color: #ffffff;
+    color: #1a73e8;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     font-weight: 600;
 }
 
-.history-table tr:hover {
-    background-color: #f9f9f9;
+/* Outline Buttons (Tất cả, Tiền vào, Tiền ra) */
+.btn-filter.outline {
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
 }
 
-.type-badge {
-    padding: 5px 10px;
-    border-radius: 4px;
+.btn-filter.outline.active {
+    border-color: #1a73e8;
+    color: #1a73e8;
+    background-color: #f0f5ff;
+    box-shadow: none;
+}
+
+/* Transaction List Container */
+.transaction-list-container {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    background-color: #fafafa;
+}
+
+.month-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.month-total {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+/* Transaction Item */
+.transaction-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.tx-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.tx-item:hover {
+    background-color: #f9fafb;
+}
+
+.tx-item:last-child {
+    border-bottom: none;
+}
+
+.tx-item-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Icons */
+.tx-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-deposit {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.icon-transfer {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+}
+
+.icon-bill {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+/* Text info */
+.tx-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tx-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.tx-meta {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* Right side - Amount */
+.tx-item-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.tx-amount {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.tx-amount.positive {
+    color: #059669; /* Xanh lá */
+}
+
+.tx-amount.negative {
+    color: #111827; /* Đen đậm */
+}
+
+.tx-status {
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 600;
+    color: #059669;
+    background-color: #d1fae5;
+    padding: 2px 8px;
+    border-radius: 12px;
 }
 
-.type-badge.transfer { background-color: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
-.type-badge.deposit { background-color: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
-.type-badge.bill { background-color: #fff2e8; color: #fa541c; border: 1px solid #ffbb96; }
-
-.amt-positive {
-    color: #52c41a;
-    font-weight: bold;
+/* Load more / States */
+.btn-load-more {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    color: #1a73e8;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
-.amt-negative {
-    color: #ff4d4f;
-    font-weight: bold;
+.btn-load-more:hover {
+    background-color: #f9fafb;
 }
 
-.empty-state {
+.loading-state, .empty-state {
     text-align: center;
-    padding: 40px;
-    color: #8c8c8c;
+    padding: 48px;
+    color: #6b7280;
+    font-size: 15px;
 }

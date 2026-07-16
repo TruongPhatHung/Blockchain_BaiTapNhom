@@ -12,6 +12,8 @@ import AdminLayout from '../layouts/AdminLayout';
 import ManageUsers from '../pages/Staff/ManageUsers';
 import SupportTickets from '../pages/Staff/SupportTickets';
 import Refund from '../pages/Staff/Refund'; // Import trang Refund cho Staff
+import Settings from '../pages/User/Settings'; // Import trang Settings cho User
+import EditProfile from '../pages/User/EditProfile'; // Import trang EditProfile cho User
 
 // --- IMPORT CHO ADMIN ---
 import LedgerExplorer from '../pages/Admin/LedgerExplorer';
@@ -32,6 +34,9 @@ const AppRoutes = () => {
                 <Route path="transfer" element={<Transfer />} />
                 <Route path="history" element={<History />} />
                 <Route path="bill-pay" element={<BillPay />} />
+                <Route path="settings" element={<Settings />} /> {/* Thêm đường dẫn cho trang Settings */}
+                <Route path="settings/edit-profile" element={<EditProfile />} /> {/* Thêm đường dẫn cho trang EditProfile */}
+
             </Route>
 
             {/* LUỒNG STAFF (Nhân Viên) */}

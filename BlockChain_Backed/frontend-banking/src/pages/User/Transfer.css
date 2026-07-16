@@ -1,105 +1,386 @@
 /* src/pages/User/Transfer.css */
-.transfer-container {
-    background-color: white;
-    padding: 30px;
+.transfer-page-container {
+    width: 100%;
+    max-width: 1200px; /* Nới rộng ra 1200px để khớp màn hình dashboard to */
+    margin: 0 auto;
+    padding: 24px 32px;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1c23;
+    box-sizing: border-box;
+}
+
+/* Header */
+.transfer-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+}
+
+.transfer-header p {
+    color: #6b7280;
+    margin: 0 0 32px 0;
+    font-size: 15px;
+}
+
+/* Tabs */
+.transfer-tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 16px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    max-width: 500px; /* Căn giữa và thu gọn form cho đẹp */
-    margin: 40px auto;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
-.transfer-title {
-    text-align: center;
-    color: #001529;
-    margin-bottom: 25px;
-    font-size: 22px;
+.tab-btn svg {
+    width: 20px;
+    height: 20px;
+    color: #6b7280;
+    transition: color 0.25s ease;
 }
 
+.tab-btn:hover {
+    border-color: #cbd5e1;
+    background-color: #f9fafb;
+}
+
+.tab-btn.active {
+    border: 2px solid #233b8a;
+    color: #233b8a;
+    background-color: #f4f6fb; /* Nền xanh nhạt sang trọng */
+}
+
+.tab-btn.active svg {
+    color: #233b8a;
+}
+
+/* Form Card */
+.transfer-form-card {
+    background-color: #ffffff;
+    border-radius: 16px; /* Bo tròn mượt hơn */
+    padding: 36px 48px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f3f4f6;
+}
+
+/* Section Titles */
+.form-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+    margin: 32px 0 20px 0;
+    padding-left: 14px;
+    border-left: 4px solid #233b8a; /* Xanh đậm đồng bộ app */
+    line-height: 1.2;
+}
+.form-section-title:first-child {
+    margin-top: 0;
+}
+
+/* Form Groups & Inputs */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .form-label {
     display: block;
     margin-bottom: 8px;
+    font-size: 14px;
     font-weight: 600;
-    color: #555;
+    color: #374151;
 }
 
 .form-input {
     width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
     font-size: 15px;
-    box-sizing: border-box; /* Đảm bảo padding không làm tràn width */
-    transition: all 0.3s;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    background-color: #fff;
+    font-family: inherit;
+    color: #1f2937;
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
 }
 
 .form-input:focus {
-    border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    border-color: #233b8a;
+    box-shadow: 0 0 0 3px rgba(35, 59, 138, 0.15);
     outline: none;
 }
 
-.submit-btn {
-    width: 100%;
-    padding: 14px;
-    background-color: #1890ff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: bold;
+.readonly-input {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 500;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+.select-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
     cursor: pointer;
-    transition: background-color 0.3s;
+}
+
+/* Balance Info */
+.balance-info {
+    text-align: right;
+    font-size: 13px;
+    color: #6b7280;
     margin-top: 10px;
 }
-
-.submit-btn:hover {
-    background-color: #40a9ff;
+.balance-info strong {
+    color: #059669; /* Đổi số dư sang màu xanh lá cho tích cực */
+    font-weight: 700;
 }
 
-.submit-btn:disabled {
-    background-color: #d9d9d9;
-    cursor: not-allowed;
+/* Input with Icon inside */
+.input-with-icon {
+    position: relative;
+}
+.input-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+.input-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Amount Input Wrapper */
+.amount-input-wrapper {
+    position: relative;
+}
+.amount-input {
+    font-size: 18px;
+    font-weight: 700;
+    padding-right: 64px;
+    color: #111827;
+}
+.currency-suffix {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+/* Quick Amount Buttons */
+.quick-amount-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+.quick-amount-buttons button {
+    padding: 8px 16px;
+    background-color: #f3f4f6;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.quick-amount-buttons button:hover {
+    background-color: #f4f6fb;
+    border-color: #233b8a;
+    color: #233b8a;
+}
+
+.textarea-input {
+    resize: none;
 }
 
 .error-message {
-    color: #ff4d4f;
-    font-size: 14px;
-    margin-top: 5px;
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 8px;
+    font-weight: 500;
 }
 
-/* Giao diện khi chuyển tiền thành công */
-.success-screen {
-    text-align: center;
-    padding: 20px 0;
+/* Form Footer / Submit Area */
+.form-submit-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px dashed #e5e7eb; /* Nét đứt nhìn modern hơn */
+}
+.fee-text {
+    font-size: 15px;
+    color: #6b7280;
+}
+.fee-text .free-text {
+    color: #059669;
+    font-weight: 700;
 }
 
-.success-icon {
-    font-size: 60px;
-    color: #52c41a;
-    margin-bottom: 15px;
+.btn-primary {
+    padding: 14px 36px;
+    background-color: #233b8a;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.btn-primary:hover {
+    background-color: #1a2c6b;
+}
+.btn-primary:active {
+    transform: scale(0.98);
+}
+.btn-primary:disabled {
+    background-color: #d1d5db;
+    cursor: not-allowed;
 }
 
-.success-text {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
+/* Recent Recipients */
+.recent-recipients-section {
+    margin-top: 40px;
+}
+.recent-recipients-section h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #374151;
     margin-bottom: 20px;
 }
-
-.new-transfer-btn {
-    background-color: white;
-    color: #1890ff;
-    border: 1px solid #1890ff;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+.recent-list {
+    display: flex;
+    gap: 24px;
 }
+.recent-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.recent-item:hover {
+    transform: translateY(-4px);
+}
+.recent-item span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+}
+.avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.add-new .avatar {
+    background-color: #ffffff;
+    color: #6b7280;
+    border: 2px dashed #d1d5db;
+    box-shadow: none;
+    transition: all 0.2s;
+}
+.add-new:hover .avatar {
+    border-color: #233b8a;
+    color: #233b8a;
+    background-color: #f4f6fb;
+}
+.bg-blue { background-color: #2563eb; }
+.bg-brown { background-color: #d97706; }
 
-.new-transfer-btn:hover {
-    background-color: #e6f7ff;
+/* Success Screen - Nâng cấp thành dạng hóa đơn/receipt xịn */
+.success-screen {
+    text-align: center;
+    padding: 64px 32px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+    border: 1px solid #f3f4f6;
+    max-width: 500px;
+    margin: 0 auto;
+}
+.success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: #d1fae5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #059669;
+}
+.success-icon svg {
+    width: 40px;
+    height: 40px;
+}
+.success-text {
+    font-size: 26px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 24px;
+}
+.success-amount {
+    font-size: 18px;
+    color: #4b5563;
+    margin-bottom: 12px;
+}
+.success-amount strong {
+    font-size: 24px;
+    color: #233b8a;
+}
+.success-account {
+    font-size: 16px;
+    color: #6b7280;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.success-account strong {
+    color: #111827;
+}
+.mt-4 {
+    margin-top: 32px;
+    width: 100%;
 }

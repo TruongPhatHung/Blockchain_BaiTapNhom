@@ -1,47 +1,224 @@
 /* src/pages/User/BillPay.css */
+
+.bill-wrapper {
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100%;
+}
+
 .bill-container {
-    background-color: white;
-    padding: 30px;
+    background-color: #ffffff;
+    padding: 32px 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 640px;
+    border: 1px solid #f0f0f0;
+}
+
+/* Header section */
+.bill-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.header-icon {
+    color: #1a73e8;
+    background: #e8f0fe;
+    padding: 12px;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    max-width: 600px;
-    margin: 20px auto;
+    width: 52px;
+    height: 52px;
 }
 
 .bill-title {
-    text-align: center;
-    color: #001529;
-    margin-bottom: 25px;
+    color: #111827;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+}
+
+.bill-subtitle {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Services Grid */
+.service-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 16px;
 }
 
 .service-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 16px;
+    margin-bottom: 32px;
 }
 
 .service-card {
-    border: 2px solid #f0f0f0;
-    border-radius: 8px;
-    padding: 20px 10px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
 .service-card:hover {
-    border-color: #91d5ff;
+    border-color: #a7c7f9;
+    background-color: #f8faff;
+    transform: translateY(-2px);
 }
 
+.service-icon-wrapper {
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.service-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+/* Active state for service card */
 .service-card.selected {
-    border-color: #1890ff;
-    background-color: #e6f7ff;
-    color: #1890ff;
-    font-weight: bold;
+    border-color: #1a73e8;
+    background-color: #e8f0fe;
+    box-shadow: 0 0 0 1px #1a73e8;
 }
 
-.service-icon {
-    font-size: 28px;
-    margin-bottom: 10px;
+.service-card.selected .service-icon-wrapper {
+    color: #1a73e8;
+}
+
+.service-card.selected .service-name {
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+/* Form Styles */
+.bill-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #111827;
+    transition: all 0.2s ease;
+    background-color: #f9fafb;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Input with currency suffix */
+.input-with-currency {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-currency .form-input {
+    padding-right: 60px; /* Make room for text */
+}
+
+.currency-suffix {
+    position: absolute;
+    right: 16px;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Alert Messages */
+.alert-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-message.success {
+    background-color: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.alert-message.error {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Submit Button */
+.submit-btn {
+    background-color: #1a73e8;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+    box-shadow: 0 4px 6px rgba(26, 115, 232, 0.2);
+}
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #1557b0;
+    box-shadow: 0 6px 12px rgba(26, 115, 232, 0.3);
+    transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
 }
