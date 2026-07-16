@@ -36,16 +36,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Kích hoạt cấu hình CORS bên dưới
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Tắt CSRF vì chúng ta dùng API (JWT Token) thay vì Session Cookie
                 .csrf(csrf -> csrf.disable())
-
-                // Cấu hình không lưu Session (Stateless) phù hợp với REST API
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Cấu hình phân quyền cho từng đường dẫn API
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép tất cả mọi người truy cập API auth (Đăng nhập, Đăng ký)
                         .requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
@@ -57,15 +50,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
 
                         // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
-                        // Đã bổ sung thêm các đường dẫn giao dịch và thống kê của hệ thống ngân hàng
-                        .requestMatchers("/api/user/**", "/api/transactions/**", "/api/statistics/**").hasAnyRole("USER", "STAFF", "ADMIN")
+                        // BỔ SUNG: Thêm các endpoint mới cho thông báo, user, danh bạ
+                        .requestMatchers(
+                                "/api/user/**",
+                                "/api/transactions/**",
+                                "/api/statistics/**",
+                                "/api/notifications/**",
+                                "/api/users/**",
+                                "/api/beneficiaries/**"
+                        ).hasAnyRole("USER", "STAFF", "ADMIN")
 
                         // Bất kỳ Request nào khác ngoài các mục trên đều bắt buộc phải đăng nhập
                         .anyRequest().authenticated()
                 );
-
-        // Nơi đây sau này chúng ta sẽ chèn thêm bộ lọc (Filter) để kiểm tra JWT Token
-        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -74,14 +71,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Thay đổi port 5173 thành port thực tế nếu React của bạn chạy port khác
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Áp dụng cho mọi API
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
