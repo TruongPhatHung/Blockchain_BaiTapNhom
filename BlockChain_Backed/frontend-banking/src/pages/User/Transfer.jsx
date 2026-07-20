@@ -1,228 +1,206 @@
-// src/pages/User/Transfer.jsx
-import React, { useState } from 'react';
-import txService from '../../services/tx.service';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // THÊM IMPORT NÀY
+import { ethers } from 'ethers';
+import { Wallet, AlertCircle, CheckCircle2, ArrowRight, MessageSquare } from 'lucide-react';
 import './Transfer.css';
 
 const Transfer = () => {
-    const [activeTab, setActiveTab] = useState('internal');
-    const [formData, setFormData] = useState({
-        toAccount: '',
-        recipientName: '', 
-        amount: '',
-        description: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [isSuccess, setIsSuccess] = useState(false);
+    const navigate = useNavigate(); // KHỞI TẠO ĐIỀU HƯỚNG
 
-    // Mock data số dư
-    const availableBalance = 125500000;
+    const [currentAccount, setCurrentAccount] = useState('');
+    const [balance, setBalance] = useState('0.0000');
+    const [recipient, setRecipient] = useState('');
+    const [amount, setAmount] = useState('');
+    const [memo, setMemo] = useState('');
+    const [notification, setNotification] = useState({ message: '', status: '' });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+    const fetchBalance = async (account) => {
+        try {
+            if (window.ethereum) {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const balanceWei = await provider.getBalance(account);
+                const balanceEth = ethers.formatEther(balanceWei);
+                setBalance(Number(balanceEth).toFixed(4));
+            }
+        } catch (error) {
+            console.error("Lỗi lấy số dư:", error);
+        }
     };
 
-    const handleQuickAmount = (amount) => {
-        setFormData({ ...formData, amount: amount });
+    const handleAccountChange = (account) => {
+        setCurrentAccount(account);
+        fetchBalance(account);
+        setMemo(`Chuyển tiền từ ${account.slice(0, 6)}...${account.slice(-4)}`);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
+    const connectWallet = async () => {
+        try {
+            if (!window.ethereum) {
+                setNotification({ message: 'Vui lòng cài đặt MetaMask!', status: 'error' });
+                return;
+            }
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            handleAccountChange(accounts[0]);
+            
+            setNotification({ message: 'Kết nối ví thành công!', status: 'success' });
+            setTimeout(() => setNotification({ message: '', status: '' }), 3000);
+        } catch (error) {
+            setNotification({ message: 'Lỗi kết nối ví. Vui lòng thử lại.', status: 'error' });
+        }
+    };
+
+    useEffect(() => {
+        const checkConnection = async () => {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    handleAccountChange(accounts[0]);
+                }
+            }
+        };
+        checkConnection();
         
-        if (formData.amount <= 0) {
-            setError('Số tiền chuyển phải lớn hơn 0');
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length > 0) {
+                    handleAccountChange(accounts[0]);
+                } else {
+                    setCurrentAccount('');
+                    setBalance('0.0000');
+                    setMemo('');
+                }
+            });
+        }
+    }, []);
+
+    // HÀM CHUYỂN TRANG
+    const handleContinue = (e) => {
+        e.preventDefault();
+        setNotification({ message: '', status: '' });
+        
+        if (!currentAccount) {
+            setNotification({ message: 'Vui lòng kết nối ví trước khi chuyển!', status: 'error' });
             return;
         }
-
-        setLoading(true);
-        try {
-            const payload = {
-                toAccount: formData.toAccount,
-                amount: parseFloat(formData.amount),
-                transactionType: 'TRANSFER',
-                description: formData.description || 'Chuyen tien'
-            };
-
-            await txService.transfer(payload);
-            setIsSuccess(true);
-        } catch (err) {
-            setError(err.response?.data?.message || 'Có lỗi xảy ra khi chuyển tiền. Vui lòng thử lại!');
-        } finally {
-            setLoading(false);
+        if (!ethers.isAddress(recipient)) {
+            setNotification({ message: 'Địa chỉ ví người nhận không hợp lệ!', status: 'error' });
+            return;
         }
+        if (parseFloat(amount) <= 0 || isNaN(amount)) {
+            setNotification({ message: 'Số lượng phải lớn hơn 0!', status: 'error' });
+            return;
+        }
+        if (parseFloat(amount) > parseFloat(balance)) {
+             setNotification({ message: 'Số dư không đủ để thực hiện giao dịch!', status: 'error' });
+             return;
+        }
+
+        // CHUYỂN HƯỚNG VÀ TRUYỀN DỮ LIỆU SANG TRANG XÁC NHẬN
+        navigate('/transfer-confirm', { 
+            state: { 
+                sender: currentAccount,
+                recipient: recipient, 
+                amount: amount, 
+                memo: memo 
+            } 
+        });
     };
 
-    const handleNewTransfer = () => {
-        setFormData({ toAccount: '', recipientName: '', amount: '', description: '' });
-        setIsSuccess(false);
-        setError('');
-    };
-
-    // MÀN HÌNH THÀNH CÔNG
-    if (isSuccess) {
-        return (
-            <div className="transfer-page-container">
-                <div className="success-screen">
-                    <div className="success-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                    <div className="success-text">Giao dịch thành công!</div>
-                    <p className="success-amount">Đã chuyển <strong>{parseFloat(formData.amount).toLocaleString()} VNĐ</strong></p>
-                    <p className="success-account">Đến tài khoản: <strong>{formData.toAccount}</strong></p>
-                    <button className="btn-primary mt-4" onClick={handleNewTransfer}>
-                        Thực hiện giao dịch khác
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // MÀN HÌNH CHUYỂN TIỀN
     return (
-        <div className="transfer-page-container">
-            <div className="transfer-header">
-                <h2>Chuyển tiền</h2>
-                <p>Thực hiện giao dịch chuyển khoản an toàn và nhanh chóng.</p>
-            </div>
-
-            <div className="transfer-tabs">
-                <button 
-                    className={`tab-btn ${activeTab === 'internal' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('internal')}
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"></path><path d="M3 10h18"></path><path d="M5 6l7-3 7 3"></path><path d="M4 10v11"></path><path d="M20 10v11"></path><path d="M8 14v3"></path><path d="M12 14v3"></path><path d="M16 14v3"></path></svg>
-                    Trong Mini Bank
-                </button>
-                <button 
-                    className={`tab-btn ${activeTab === 'external' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('external')}
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
-                    Liên ngân hàng
-                </button>
-                <button 
-                    className={`tab-btn ${activeTab === 'phone' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('phone')}
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                    Qua số điện thoại
-                </button>
-            </div>
-
-            <form className="transfer-form-card" onSubmit={handleSubmit}>
-                {/* TÀI KHOẢN NGUỒN */}
-                <div className="form-section-title">Tài khoản nguồn</div>
-                <div className="form-group source-account-group">
-                    <select className="form-input select-input" disabled>
-                        <option>TK Thanh toán - 999988888</option>
-                    </select>
-                    <div className="balance-info">
-                        Số dư khả dụng: <strong>{availableBalance.toLocaleString()} VNĐ</strong>
-                    </div>
+        <div className="transfer-page-wrapper">
+            <div className="transfer-container">
+                <div className="transfer-header-text">
+                    <h1>Chuyển Tiền</h1>
+                    <p>Gửi SepoliaETH an toàn qua mạng lưới Web3</p>
                 </div>
 
-                {/* THÔNG TIN NGƯỜI NHẬN */}
-                <div className="form-section-title">Thông tin người nhận</div>
-                <div className="form-group">
-                    <label className="form-label">Số tài khoản thụ hưởng</label>
-                    <div className="input-with-icon">
-                        <input 
-                            type="text" 
-                            name="toAccount"
-                            className="form-input" 
-                            placeholder="Nhập số tài khoản..." 
-                            value={formData.toAccount}
-                            onChange={handleChange}
-                            required
-                        />
-                        <span className="input-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        </span>
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label className="form-label">Tên người nhận</label>
-                    <input 
-                        type="text" 
-                        name="recipientName"
-                        className="form-input readonly-input" 
-                        placeholder="Vui lòng nhập số tài khoản trước..." 
-                        value={formData.recipientName}
-                        onChange={handleChange}
-                        readOnly 
-                    />
-                </div>
-
-                {/* CHI TIẾT GIAO DỊCH */}
-                <div className="form-section-title">Chi tiết giao dịch</div>
-                <div className="form-group">
-                    <label className="form-label">Số tiền chuyển</label>
-                    <div className="amount-input-wrapper">
-                        <input 
-                            type="number" 
-                            name="amount"
-                            className="form-input amount-input" 
-                            placeholder="0" 
-                            value={formData.amount}
-                            onChange={handleChange}
-                            required
-                        />
-                        <span className="currency-suffix">VND</span>
-                    </div>
-                    {error && <div className="error-message">{error}</div>}
-                    
-                    <div className="quick-amount-buttons">
-                        <button type="button" onClick={() => handleQuickAmount(500000)}>500,000</button>
-                        <button type="button" onClick={() => handleQuickAmount(1000000)}>1,000,000</button>
-                        <button type="button" onClick={() => handleQuickAmount(2000000)}>2,000,000</button>
-                        <button type="button" onClick={() => handleQuickAmount(5000000)}>5,000,000</button>
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Nội dung chuyển khoản</label>
-                    <textarea 
-                        name="description"
-                        className="form-input textarea-input" 
-                        placeholder="Nhập nội dung chuyển khoản..." 
-                        value={formData.description}
-                        onChange={handleChange}
-                        rows="2"
-                    ></textarea>
-                </div>
-
-                {/* SUBMIT AREA */}
-                <div className="form-submit-area">
-                    <span className="fee-text">Phí giao dịch: <strong className="free-text">Miễn phí</strong></span>
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? 'Đang xử lý...' : 'Tiếp tục giao dịch'}
-                    </button>
-                </div>
-            </form>
-
-            {/* NGƯỜI NHẬN GẦN ĐÂY */}
-            <div className="recent-recipients-section">
-                <h4>Người nhận gần đây</h4>
-                <div className="recent-list">
-                    <div className="recent-item add-new">
-                        <div className="avatar">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <div className="transfer-card-modern">
+                    <div className="wallet-status-box">
+                        <div className="wallet-icon-bg">
+                            <Wallet size={24} className="text-blue" />
                         </div>
-                        <span>Thêm mới</span>
+                        <div className="wallet-details">
+                            <p className="wallet-label">Tài khoản kết nối (Sepolia)</p>
+                            {currentAccount ? (
+                                <>
+                                    <p className="wallet-address">{currentAccount.slice(0, 6)}...{currentAccount.slice(-4)}</p>
+                                    <p className="wallet-balance">Số dư: <strong>{balance} SepoliaETH</strong></p>
+                                </>
+                            ) : (
+                                <p className="wallet-disconnected">Chưa kết nối</p>
+                            )}
+                        </div>
+                        {!currentAccount && (
+                            <button type="button" className="btn-connect-sm" onClick={connectWallet}>
+                                Kết nối ngay
+                            </button>
+                        )}
                     </div>
-                    <div className="recent-item">
-                        <div className="avatar bg-blue">HT</div>
-                        <span>Hoàng T.</span>
-                    </div>
-                    <div className="recent-item">
-                        <div className="avatar bg-brown">LM</div>
-                        <span>Lê Minh</span>
-                    </div>
+
+                    <hr className="divider" />
+
+                    {notification.message && (
+                        <div className={`notification-alert ${notification.status}`}>
+                            {notification.status === 'success' && <CheckCircle2 size={20} />}
+                            {notification.status === 'error' && <AlertCircle size={20} />}
+                            <span>{notification.message}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleContinue} className="transfer-form-modern">
+                        <div className="form-grid">
+                            <div className="input-group">
+                                <label>Đến địa chỉ ví</label>
+                                <div className="input-wrapper">
+                                    <input
+                                        type="text"
+                                        placeholder="Nhập địa chỉ ví 0x..."
+                                        value={recipient}
+                                        onChange={(e) => setRecipient(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="input-group">
+                                <label>Số lượng (SepoliaETH)</label>
+                                <div className="input-wrapper amount-wrapper">
+                                    <input
+                                        type="number"
+                                        step="0.0001"
+                                        placeholder="0.00"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        required
+                                    />
+                                    <span className="currency-suffix">SepoliaETH</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="input-group">
+                            <label>Nội dung chuyển khoản (Tùy chọn)</label>
+                            <div className="input-wrapper">
+                                <div className="input-icon">
+                                    <MessageSquare size={18} color="#94a3b8" />
+                                </div>
+                                <input
+                                    type="text"
+                                    className="input-with-icon"
+                                    placeholder="Nhập nội dung chuyển tiền..."
+                                    value={memo}
+                                    onChange={(e) => setMemo(e.target.value)}
+                                    maxLength={100}
+                                />
+                            </div>
+                            <p className="help-text">Nội dung sẽ được mã hóa và lưu trên Blockchain.</p>
+                        </div>
+
+                        <button type="submit" className="btn-transfer-modern" disabled={!currentAccount}>
+                            <span>Tiếp tục chuyển tiền</span>
+                            <ArrowRight size={20} />
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

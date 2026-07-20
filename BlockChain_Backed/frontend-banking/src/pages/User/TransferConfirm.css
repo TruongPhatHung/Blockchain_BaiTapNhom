@@ -1,0 +1,111 @@
+/* Sử dụng lại layout nền giống Transfer.css */
+.confirmation-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.confirmation-details {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-label {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 100px;
+}
+
+.detail-value {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: right;
+    word-break: break-all;
+}
+
+.highlight-address {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.highlight-amount {
+    font-weight: 700;
+    font-size: 18px;
+    color: #10b981;
+}
+
+.warning-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: #f0fdf4;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #bbf7d0;
+}
+
+.warning-box .text-green {
+    color: #16a34a;
+    min-width: 20px;
+}
+
+.warning-box p {
+    margin: 0;
+    color: #166534;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.btn-secondary {
+    flex: 1;
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-group .btn-transfer-modern {
+    flex: 2; 
+    margin-top: 0; 
+}

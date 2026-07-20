@@ -1,156 +1,279 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from "../../store/AuthContext";
+import { 
+    Eye, EyeOff, Send, PlusCircle, CreditCard, 
+    TrendingUp, TrendingDown, Music, ShoppingBag, Briefcase 
+} from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
+    const navigate = useNavigate(); // Hook để chuyển trang
+    
+    // --- STATE QUẢN LÝ DỮ LIỆU ---
     const [showBalance, setShowBalance] = useState(true);
+    const [walletAddress, setWalletAddress] = useState("Đang tải...");
+    const [walletBalance, setWalletBalance] = useState("0.0000");
+    const [isConnecting, setIsConnecting] = useState(false);
     
-    const accountInfo = {
-        accountNumber: '9876 5432 1098 4567',
-        balance: 50000000
-    };
-    
-    // Dữ liệu giả lập
-    const recentTx = [
-        { id: 1, type: 'TRANSFER', title: 'Chuyển tiền cho mẹ', amount: -2000000, time: 'Hôm nay, 10:42 AM' },
-        { id: 2, type: 'DEPOSIT', title: 'Nạp tiền từ ATM', amount: 10000000, time: 'Hôm nay, 08:15 AM' },
-        { id: 3, type: 'BILL_PAYMENT', title: 'Thanh toán tiền điện', amount: -1500000, time: 'Hôm qua, 05:00 PM' }
-    ];
+    // State cho Lịch sử giao dịch (Dữ liệu thật/giả lập)
+    const [transactions, setTransactions] = useState([]);
 
-    // Helper render icon giao dịch
-    const renderTxIcon = (type) => {
-        switch(type) {
-            case 'TRANSFER': return <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>;
-            case 'DEPOSIT': return <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>;
-            case 'BILL_PAYMENT': return <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-            default: return null;
+    // --- CÁC HÀM XỬ LÝ METAMASK ---
+    const fetchBalance = async (account) => {
+        try {
+            const balanceHex = await window.ethereum.request({
+                method: 'eth_getBalance',
+                params: [account, 'latest']
+            });
+            const balanceInWei = BigInt(balanceHex);
+            const balanceInEth = (Number(balanceInWei) / 1e18).toFixed(4);
+            setWalletBalance(balanceInEth);
+        } catch (error) {
+            console.error("Lỗi lấy số dư:", error);
         }
     };
 
+   const checkWalletConnection = async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    const account = accounts[0];
+                    // BỎ cắt chuỗi, lưu trực tiếp toàn bộ địa chỉ ví
+                    setWalletAddress(account);
+                    fetchBalance(account); 
+                } else {
+                    setWalletAddress("Chưa kết nối");
+                    setWalletBalance("0.0000");
+                }
+            } catch (error) {
+                console.error("Lỗi kiểm tra ví:", error);
+            }
+        }
+    };
+
+    const connectWallet = async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                setIsConnecting(true);
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const account = accounts[0];
+                // BỎ cắt chuỗi, lưu trực tiếp toàn bộ địa chỉ ví
+                setWalletAddress(account);
+                fetchBalance(account);
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+            } finally {
+                setIsConnecting(false);
+            }
+        } else {
+            alert("Vui lòng cài đặt MetaMask!");
+        }
+    };
+    // --- HÀM XỬ LÝ ĐỒNG BỘ NÚT BẤM ---
+    const handleSync = async () => {
+        // Kiểm tra xem đã có địa chỉ ví chưa
+        if (walletAddress !== "Chưa kết nối" && walletAddress !== "Đang tải...") {
+            setIsConnecting(true); // Đổi trạng thái nút thành "Đang xử lý..."
+            await fetchBalance(walletAddress); // Gọi trực tiếp hàm lấy số dư
+            setIsConnecting(false); // Trả lại trạng thái bình thường
+        } else {
+            // Nếu chưa kết nối thì tiến hành kết nối
+            connectWallet();
+        }
+    };
+
+    // --- CƠ CHẾ NẠP TIỀN THÔNG MINH ---
+    const handleDeposit = () => {
+        if (walletAddress === "Chưa kết nối" || walletAddress === "Đang tải...") {
+            connectWallet();
+        } else {
+            // Sau này bạn có thể mở một Modal chứa QR Code ở đây
+            alert(`Để nạp tiền, vui lòng chuyển SepoliaETH mạng Web3 vào ví: \n${walletAddress}`);
+        }
+    };
+
+    // --- LẤY DỮ LIỆU LỊCH SỬ GIAO DỊCH TỪ BACKEND ---
+    const fetchTransactions = async () => {
+        try {
+            // TODO: Thay thế bằng API thật của bạn
+            // const response = await axios.get('/api/transactions');
+            // setTransactions(response.data);
+            
+            // Giả lập dữ liệu trả về từ API để làm UI
+            const mockData = [
+                { id: 1, title: 'Apple Music', time: 'Hôm nay, 10:42 AM', amount: -9.99, type: 'expense', icon: 'music' },
+                { id: 2, title: 'Tạp hóa', time: 'Hôm nay, 08:15 AM', amount: -45.20, type: 'expense', icon: 'shopping' },
+                { id: 3, title: 'Lương', time: 'Hôm qua, 05:00 PM', amount: 3200.00, type: 'income', icon: 'work' },
+            ];
+            setTransactions(mockData);
+        } catch (error) {
+            console.error("Lỗi tải giao dịch:", error);
+        }
+    };
+
+    // Hàm phụ trợ để render Icon động dựa trên loại giao dịch
+    const renderTxIcon = (type) => {
+        switch(type) {
+            case 'music': return <Music size={18} className="text-blue-500" />;
+            case 'shopping': return <ShoppingBag size={18} className="text-blue-500" />;
+            case 'work': return <Briefcase size={18} className="text-green-500" />;
+            default: return <CreditCard size={18} />;
+        }
+    };
+
+    // --- EFFECT KHỞI TẠO ---
+    useEffect(() => {
+        checkWalletConnection();
+        fetchTransactions();
+
+        if (typeof window.ethereum !== 'undefined') {
+            const handleAccountsChanged = (accounts) => checkWalletConnection();
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            return () => window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
+    }, []);
+
     return (
         <div className="dashboard-container">
-            {/* Header Lời chào */}
-            <div className="dashboard-header">
+            {/* Header */}
+            <div className="dashboard-header flex-header">
                 <div>
-                    <h2>Chào mừng trở lại, {user?.username || 'hungsayhi'}! 👋</h2>
-                    <p>Cập nhật tổng quan tài chính của bạn hôm nay.</p>
+                    <h1 className="welcome-text">Chào mừng trở lại, {user?.username || 'hungsayhi'}!</h1>
+                    <p className="subtitle">Đây là tổng quan tài chính của bạn hôm nay.</p>
                 </div>
-                <div className="date-badge">
-                    {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </div>
+                
+                {/* --- NÚT KẾT NỐI / ĐỒNG BỘ METAMASK --- */}
+                {/* Đã bỏ điều kiện ẩn nút, nút sẽ luôn luôn hiển thị */}
+                <button 
+                    className="connect-wallet-btn" 
+                    onClick={handleSync}
+                    disabled={isConnecting}
+                >
+                    {isConnecting ? 'Đang xử lý...' : (
+                        (walletAddress === "Chưa kết nối" || walletAddress === "Đang tải...") 
+                        ? '🦊 Kết nối MetaMask' 
+                        : '🔄 Đồng bộ ví'
+                    )}
+                </button>
             </div>
 
             <div className="dashboard-grid">
-                {/* CỘT TRÁI */}
+                {/* --- CỘT TRÁI (MAIN) --- */}
                 <div className="main-column">
                     
-                    {/* 1. Thẻ ATM Premium */}
+                    {/* Thẻ số dư (Balance Card) */}
                     <div className="balance-card">
-                        <div className="card-overlay"></div>
-                        <div className="card-top">
-                            <span className="card-label">THẺ GHI NỢ QUỐC TẾ</span>
-                            {/* Icon Wifi / Contactless */}
-                            <svg className="contactless-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8.5 21.3c-1.8-1.5-3-3.7-3-6.3 0-4.4 3.6-8 8-8s8 3.6 8 8c0 2.6-1.2 4.8-3 6.3"/><path d="M11 21.3c-1-1-1.5-2.3-1.5-3.8 0-2.8 2.2-5 5-5s5 2.2 5 5c0 1.5-.5 2.8-1.5 3.8"/></svg>
+                        <div className="card-top-info">
+                            <p className="card-label">SỐ TÀI KHOẢN (VÍ)</p>
+                           <p className="card-number" style={{ fontSize: '15px', wordBreak: 'break-all' }}>
+                                {walletAddress !== "Chưa kết nối" && walletAddress !== "Đang tải..." 
+                                    ? walletAddress 
+                                    : "----"}
+                            </p>
                         </div>
                         
-                        <div className="card-chip">
-                            <svg viewBox="0 0 40 30" fill="none"><rect width="40" height="30" rx="4" fill="#fbbf24"/><path d="M10 0v30M30 0v30M0 10h40M0 20h40" stroke="#d97706" strokeWidth="1"/></svg>
-                        </div>
-
-                        <div className="card-number-wrapper">
-                            <span className="card-number">{accountInfo.accountNumber}</span>
-                        </div>
-
-                        <div className="card-bottom">
-                            <div className="balance-info">
-                                <span className="card-label">SỐ DƯ HIỆN TẠI</span>
-                                <div className="balance-wrapper">
-                                    <span className="balance-amount">
-                                        {showBalance ? `${accountInfo.balance.toLocaleString('vi-VN')} VNĐ` : '****** VNĐ'}
-                                    </span>
+                        <div className="card-bottom-info">
+                            <div>
+                                <p className="card-label">SỐ DƯ HIỆN TẠI</p>
+                                {/* Khu vực hiển thị số dư */}
+                                <div className="balance-display">
+                                    <h2 className="balance-amount">
+                                        {/* Đổi chữ ETH thành SepoliaETH ở cả hai trạng thái hiện/ẩn */}
+                                        {showBalance ? `${walletBalance} SepoliaETH` : '****** SepoliaETH'}
+                                    </h2>
+                                    <button className="eye-btn" onClick={() => setShowBalance(!showBalance)}>
+                                        {showBalance ? <Eye size={20} /> : <EyeOff size={20} />}
+                                    </button>
                                 </div>
                             </div>
-                            <button className="toggle-blind-btn" onClick={() => setShowBalance(!showBalance)}>
-                                {showBalance ? 
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> : 
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                                }
-                            </button>
+                            <div className="wallet-icon-wrapper">
+                                <CreditCard size={32} />
+                            </div>
                         </div>
                     </div>
 
-                    {/* 2. Nhóm nút thao tác nhanh */}
-                    <div className="action-buttons">
-                        <button className="action-btn primary">
-                            <div className="btn-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
-                            Chuyển tiền
+                    {/* Nút hành động (Action Buttons) */}
+                    <div className="action-buttons-grid">
+                        {/* Note: Điều hướng sang trang Transfer.jsx */}
+                        <button className="action-btn active" onClick={() => navigate('/transfer')}>
+                            <Send size={20} />
+                            <span>Chuyển tiền</span>
                         </button>
-                        <button className="action-btn">
-                            <div className="btn-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg></div>
-                            Nạp tiền
+                        
+                        <button className="action-btn" onClick={handleDeposit}>
+                            <PlusCircle size={20} />
+                            <span>Nạp tiền</span>
                         </button>
-                        <button className="action-btn">
-                            <div className="btn-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
-                            Thanh toán
+                        
+                        {/* Note: Điều hướng sang trang BillPay.jsx */}
+                        <button className="action-btn" onClick={() => navigate('/bill-pay')}>
+                            <CreditCard size={20} />
+                            <span>Thanh toán</span>
                         </button>
                     </div>
 
-                    {/* 3. Thống kê Thu / Chi */}
+                    {/* Thống kê thu chi (Stats) */}
                     <div className="stats-row">
-                        <div className="stat-card">
-                            <div className="stat-icon income"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
-                            <div className="stat-info">
-                                <span className="stat-label">Thu nhập tháng này</span>
-                                <span className="stat-value">+10,000,000 đ</span>
+                        <div className="stat-box">
+                            <p className="stat-label">Tổng thu nhập tháng này</p>
+                            <div className="stat-value-row">
+                                <h3 className="stat-amount">$5,240.00</h3>
+                                <span className="stat-badge positive">
+                                    <TrendingUp size={14} /> +12%
+                                </span>
                             </div>
                         </div>
-                        <div className="stat-card">
-                            <div className="stat-icon expense"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
-                            <div className="stat-info">
-                                <span className="stat-label">Chi tiêu tháng này</span>
-                                <span className="stat-value">-3,500,000 đ</span>
+                        <div className="stat-box">
+                            <p className="stat-label">Tổng chi tiêu tháng này</p>
+                            <div className="stat-value-row">
+                                <h3 className="stat-amount">$3,120.00</h3>
+                                <span className="stat-badge negative">
+                                    <TrendingDown size={14} /> -5%
+                                </span>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-                {/* CỘT PHẢI */}
+                {/* --- CỘT PHẢI (SIDEBAR) --- */}
                 <div className="side-column">
                     
-                    {/* 1. Danh sách giao dịch */}
-                    <div className="recent-tx-card">
+                    {/* Lịch sử giao dịch */}
+                    <div className="recent-tx-container">
                         <div className="tx-header">
                             <h3>Giao dịch gần đây</h3>
-                            <a href="/history" className="view-all">Xem tất cả</a>
+                            <span className="view-all" onClick={() => navigate('/history')}>Xem tất cả</span>
                         </div>
+                        
                         <div className="tx-list">
-                            {recentTx.map(tx => (
+                            {transactions.map((tx) => (
                                 <div className="tx-item" key={tx.id}>
-                                    <div className={`tx-icon-wrapper ${tx.amount > 0 ? 'bg-green' : tx.type === 'TRANSFER' ? 'bg-red' : 'bg-yellow'}`}>
-                                        {renderTxIcon(tx.type)}
+                                    <div className={`tx-icon ${tx.icon === 'work' ? 'bg-green-light' : 'bg-blue-light'}`}>
+                                        {renderTxIcon(tx.icon)}
                                     </div>
-                                    <div className="tx-details">
-                                        <span className="tx-title">{tx.title}</span>
-                                        <span className="tx-time">{tx.time}</span>
+                                    <div className="tx-info">
+                                        <p className="tx-title">{tx.title}</p>
+                                        <p className="tx-time">{tx.time}</p>
                                     </div>
-                                    <div className={`tx-amount ${tx.amount > 0 ? 'plus' : 'minus'}`}>
-                                        {tx.amount > 0 ? `+${tx.amount.toLocaleString('vi-VN')}` : tx.amount.toLocaleString('vi-VN')} đ
+                                    <div className={`tx-amount ${tx.type === 'income' ? 'text-green' : 'text-dark'}`}>
+                                        {tx.type === 'income' ? '+' : ''}{tx.type !== 'income' && tx.amount > 0 ? '-' : ''}{tx.amount.toFixed(2)}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* 2. Banner quảng cáo */}
-                    <div className="promo-card">
-                        <div className="promo-content">
-                            <div className="promo-badge">Premium</div>
-                            <h3>Nâng cấp tài khoản</h3>
-                            <p>Tận hưởng hạn mức chuyển tiền lên đến 2 tỷ/ngày và miễn phí mọi giao dịch.</p>
-                            <button className="promo-btn">Tìm hiểu thêm</button>
+                    {/* Banner Premium */}
+                    <div className="premium-banner">
+                        <div className="premium-content">
+                            <h3>⭐ Nâng cấp Premium</h3>
+                            <p>Hạn mức cao hơn & phí thấp hơn</p>
+                            <button className="premium-btn">Tìm hiểu thêm</button>
                         </div>
-                        <svg className="promo-bg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     </div>
 
                 </div>

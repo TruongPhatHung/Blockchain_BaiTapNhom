@@ -9,9 +9,10 @@ import Transfer from '../pages/User/Transfer';
 import History from '../pages/User/History';
 import BillPay from '../pages/User/BillPay';
 import AdminLayout from '../layouts/AdminLayout';
-import ManageUsers from '../pages/Staff/ManageUsers';
-import SupportTickets from '../pages/Staff/SupportTickets';
-import Refund from '../pages/Staff/Refund'; // Import trang Refund cho Staff
+import ManageUsers from '../pages/Admin/ManageUsers';
+import SupportTickets from '../pages/Admin/SupportTickets';
+import TransferConfirm from '../pages/User/TransferConfirm';
+
 import Settings from '../pages/User/Settings'; // Import trang Settings cho User
 import EditProfile from '../pages/User/EditProfile'; // Import trang EditProfile cho User
 
@@ -36,21 +37,20 @@ const AppRoutes = () => {
                 <Route path="bill-pay" element={<BillPay />} />
                 <Route path="settings" element={<Settings />} /> {/* Thêm đường dẫn cho trang Settings */}
                 <Route path="settings/edit-profile" element={<EditProfile />} /> {/* Thêm đường dẫn cho trang EditProfile */}
-
-            </Route>
-
-            {/* LUỒNG STAFF (Nhân Viên) */}
-            <Route path="/staff" element={<PrivateRoute allowedRoles={['STAFF']}><AdminLayout /></PrivateRoute>}>
-                <Route path="users" element={<ManageUsers />} />
-                <Route path="refund" element={<Refund />} /> {/* Khai báo đường dẫn xử lý hoàn tác */}
                 <Route path="tickets" element={<SupportTickets />} />
-                
+                <Route path="/transfer-confirm" element={<TransferConfirm />} />
             </Route>
+
+           
+               
+                
+            
 
             {/* LUỒNG ADMIN (Quản Trị Viên) */}
             <Route path="/admin" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminLayout /></PrivateRoute>}>
                 <Route path="ledger" element={<LedgerExplorer />} />
                 <Route path="audit" element={<VerifyBlockchain />} /> {/* Thay Audit bằng Verify cho khớp menu */}
+                 <Route path="tickets" element={<SupportTickets />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,306 +1,229 @@
-/* --- Biến màu sắc toàn cục (Đồng bộ với Lumina Bank) --- */
+/* Màu sắc chủ đạo từ thiết kế Lumina Bank */
 :root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border-color: #e2e8f0;
-    --success: #10b981;
-    --success-bg: #d1fae5;
-    --danger: #ef4444;
-    --danger-bg: #fee2e2;
-    --warning: #f59e0b;
-    --warning-bg: #fef3c7;
+    --brand-blue: #1E56D0;
+    --brand-dark: #112A61;
+    --bg-light: #F8FAFC;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+    --green-positive: #10B981;
+    --green-bg: #D1FAE5;
+    --red-negative: #EF4444;
+    --red-bg: #FEE2E2;
 }
 
-/* --- Container --- */
 .dashboard-container {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    animation: fadeIn 0.3s ease-in-out;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    animation: fadeIn 0.4s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
+/* --- Header --- */
 .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    margin-bottom: 24px;
 }
 
-.dashboard-header h2 {
-    margin: 0 0 6px 0;
-    color: var(--text-main);
-    font-size: 22px;
+.welcome-text {
+    font-size: 26px;
     font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
 }
 
-.dashboard-header p {
-    margin: 0;
-    color: var(--text-muted);
+.subtitle {
     font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
 }
 
-.date-badge {
-    background-color: var(--card-bg);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-}
-
-/* --- Lưới hiển thị --- */
+/* --- Layout Lưới --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1.6fr 1fr;
+    grid-template-columns: 1.6fr 1fr; /* Tỉ lệ giống hình ảnh */
     gap: 24px;
 }
 
-/* --- CỘT TRÁI --- */
-.main-column {
+.main-column, .side-column {
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
-/* 1. Thẻ ATM Premium (Glassmorphism + Gradient) */
+/* --- Thẻ xanh (Balance Card) --- */
 .balance-card {
-    background: linear-gradient(120deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
-    border-radius: 20px;
-    padding: 28px;
+    background-color: var(--brand-blue);
+    border-radius: 16px;
+    padding: 32px;
     color: white;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 12px 24px -8px rgba(37, 99, 235, 0.4);
     display: flex;
     flex-direction: column;
-    gap: 24px;
-}
-
-.card-overlay {
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.card-top {
-    display: flex;
     justify-content: space-between;
-    align-items: center;
-    z-index: 2;
+    min-height: 200px;
+    box-shadow: 0 10px 25px rgba(30, 86, 208, 0.2);
+}
+
+.card-top-info, .card-bottom-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-bottom-info {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
 .card-label {
-    font-size: 11px;
-    opacity: 0.7;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-
-.contactless-icon {
-    width: 24px;
-    height: 24px;
-    opacity: 0.8;
-}
-
-.card-chip svg {
-    width: 44px;
-    height: auto;
-    z-index: 2;
-    position: relative;
-}
-
-.card-number-wrapper {
-    z-index: 2;
-    margin-top: 4px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    letter-spacing: 0.5px;
 }
 
 .card-number {
-    font-size: 22px;
-    letter-spacing: 4px;
-    font-family: 'Courier New', Courier, monospace;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    font-size: 18px;
+    font-family: monospace;
+    letter-spacing: 2px;
+    margin: 0;
+    font-weight: 500;
 }
 
-.card-bottom {
+.balance-display {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    z-index: 2;
-}
-
-.balance-info {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 12px;
 }
 
 .balance-amount {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
+    margin: 0;
 }
 
-.toggle-blind-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    color: white;
+.eye-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
+    transition: color 0.2s;
 }
 
-.toggle-blind-btn svg {
-    width: 20px;
-    height: 20px;
+.eye-btn:hover {
+    color: white;
 }
 
-.toggle-blind-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.05);
-}
-
-/* 2. Nút thao tác nhanh */
-.action-buttons {
+.wallet-icon-wrapper {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 12px;
     display: flex;
+}
+
+/* --- Action Buttons (Chuyển tiền, Nạp, Thanh toán) --- */
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 
 .action-btn {
-    flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 16px;
-    background-color: var(--card-bg);
-    color: var(--text-main);
-    border-radius: 16px;
+    gap: 12px;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--brand-blue);
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    border: 1px solid var(--border-color);
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.btn-icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background-color: #f1f5f9;
-    color: var(--primary);
-}
-
-.btn-icon-wrapper svg {
-    width: 16px;
-    height: 16px;
 }
 
 .action-btn:hover {
-    border-color: #cbd5e1;
+    border-color: var(--brand-blue);
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.action-btn.primary {
-    background-color: var(--primary);
+.action-btn.active {
+    background-color: var(--brand-dark);
     color: white;
-    border-color: var(--primary);
+    border-color: var(--brand-dark);
 }
 
-.action-btn.primary .btn-icon-wrapper {
-    background-color: rgba(255,255,255,0.2);
-    color: white;
+.action-btn span {
+    color: inherit;
 }
 
-.action-btn.primary:hover {
-    background-color: var(--primary-hover);
-}
-
-/* 3. Thống kê Thu / Chi */
+/* --- Thống kê (Stats Box) --- */
 .stats-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 
-.stat-card {
-    flex: 1;
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.stat-box {
+    background: white;
     border: 1px solid var(--border-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stat-icon svg { width: 24px; height: 24px; }
-.stat-icon.income { background-color: var(--success-bg); color: var(--success); }
-.stat-icon.expense { background-color: var(--danger-bg); color: var(--danger); }
-
-.stat-info {
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
 }
 
 .stat-label {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
+    margin: 0;
 }
 
-.stat-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-/* --- CỘT PHẢI --- */
-.side-column {
+.stat-value-row {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* Danh sách giao dịch */
-.recent-tx-card {
-    background-color: var(--card-bg);
+.stat-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 20px;
+}
+
+.stat-badge.positive {
+    background-color: var(--green-bg);
+    color: var(--green-positive);
+}
+
+.stat-badge.negative {
+    background-color: var(--red-bg);
+    color: var(--red-negative);
+}
+
+/* --- Lịch sử giao dịch (Sidebar) --- */
+.recent-tx-container {
+    background: white;
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .tx-header {
@@ -313,14 +236,15 @@
 .tx-header h3 {
     margin: 0;
     font-size: 16px;
-    color: var(--text-main);
+    color: var(--text-primary);
+    font-weight: 700;
 }
 
 .view-all {
     font-size: 13px;
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
+    color: var(--brand-blue);
+    cursor: pointer;
+    font-weight: 500;
 }
 
 .view-all:hover {
@@ -336,111 +260,123 @@
 .tx-item {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
 }
 
-.tx-icon-wrapper {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+.tx-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.tx-icon-wrapper svg { width: 20px; height: 20px; }
-.bg-green { background-color: var(--success-bg); }
-.bg-red { background-color: var(--danger-bg); }
-.bg-yellow { background-color: var(--warning-bg); }
+.bg-blue-light { background-color: #E0E7FF; }
+.bg-green-light { background-color: var(--green-bg); }
 
-.tx-details {
+.tx-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .tx-title {
-    font-size: 14px;
+    margin: 0;
     font-weight: 600;
-    color: var(--text-main);
+    font-size: 14px;
+    color: var(--text-primary);
 }
 
 .tx-time {
+    margin: 0;
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 .tx-amount {
-    font-size: 14px;
     font-weight: 700;
+    font-size: 14px;
 }
 
-.tx-amount.plus { color: var(--success); }
-.tx-amount.minus { color: var(--text-main); }
+.text-green { color: var(--green-positive); }
+.text-dark { color: var(--text-primary); }
 
-/* Banner Promo */
-.promo-card {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+/* --- Banner Premium --- */
+.premium-banner {
+    background-color: var(--brand-dark);
     border-radius: 16px;
     padding: 24px;
     color: white;
-    position: relative;
-    overflow: hidden;
+    text-align: center;
 }
 
-.promo-content {
-    position: relative;
-    z-index: 2;
-}
-
-.promo-badge {
-    display: inline-block;
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
-    color: #78350f;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-}
-
-.promo-content h3 {
+.premium-content h3 {
     margin: 0 0 8px 0;
-    font-size: 18px;
+    font-size: 16px;
 }
 
-.promo-content p {
+.premium-content p {
     margin: 0 0 20px 0;
     font-size: 13px;
-    color: #94a3b8;
-    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
 }
 
-.promo-btn {
+.premium-btn {
     background-color: white;
-    color: #0f172a;
+    color: var(--brand-dark);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.premium-btn:hover {
+    background-color: #f1f5f9;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- Cập nhật cho Header và Nút MetaMask --- */
+.flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Tránh vỡ layout trên màn hình nhỏ */
+    gap: 16px;
+}
+
+.connect-wallet-btn {
+    background-color: #F6851B; /* Màu cam đặc trưng của MetaMask */
+    color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
-    font-size: 13px;
-    width: 100%;
-    transition: background-color 0.2s;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(246, 133, 27, 0.2);
 }
 
-.promo-btn:hover {
-    background-color: #f1f5f9; 
+.connect-wallet-btn:hover:not(:disabled) {
+    background-color: #e27618;
+    transform: translateY(-2px);
 }
 
-.promo-bg-icon {
-    position: absolute;
-    right: -20px;
-    bottom: -20px;
-    width: 120px;
-    height: 120px;
-    color: rgba(255,255,255,0.05);
-    z-index: 1;
+.connect-wallet-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #666;
 }
