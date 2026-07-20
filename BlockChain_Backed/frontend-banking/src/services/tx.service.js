@@ -1,21 +1,26 @@
-import axios from "axios";
+import api from './api';
 
-const api = axios.create({
-  baseURL: "http://localhost:8080/api", // chỉnh lại port backend nếu cần
-});
+const txService = {
+    recordOnChainTransfer: async ({ senderWallet, receiverWallet, amount, description, onChainTxHash }) => {
+        const response = await api.post('/transactions/on-chain', {
+            senderWallet,
+            receiverWallet,
+            amount,
+            description,
+            onChainTxHash,
+        });
+        return response.data;
+    },
 
-// 🔥 Interceptor: tự động gắn token vào mọi request
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token"); // hoặc "accessToken"
+    getHistory: async (walletAddress) => {
+        const response = await api.get(`/transactions/history/${encodeURIComponent(walletAddress)}`);
+        return response.data;
+    },
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    getDetail: async (transactionId) => {
+        const response = await api.get(`/transactions/${transactionId}`);
+        return response.data;
+    },
+};
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-export default api;
+export default txService;

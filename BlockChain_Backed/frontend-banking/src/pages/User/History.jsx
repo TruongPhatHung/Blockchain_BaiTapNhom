@@ -1,137 +1,87 @@
-// src/pages/User/History.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-    ArrowDownToLine, 
-    ArrowUpRight, 
-    Zap, 
-    Calendar,
-    Search
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowDownToLine, ArrowUpRight, Calendar, X } from 'lucide-react';
 import txService from '../../services/tx.service';
-import { AuthContext } from '../../store/AuthContext';
 import './History.css';
 
+const shortAddress = (address = '') => address.length > 14 ? `${address.slice(0, 8)}...${address.slice(-6)}` : address;
+const formatDate = (timestamp) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(timestamp));
+
 const History = () => {
-    const { user } = useContext(AuthContext);
     const [transactions, setTransactions] = useState([]);
+    const [walletAddress, setWalletAddress] = useState('');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
 
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                // Gọi API thực tế
-                // const data = await txService.getHistory(user.id);
-                // setTransactions(data);
-                
-                // Mock data tạm thời phong phú hơn để test UI
-                setTimeout(() => {
-                    setTransactions([
-                        { id: 'TX001', date: '12 Th10, 08:30', type: 'DEPOSIT', title: 'Nhận lương tháng 9', counterparty: 'TechCorp Inc.', amount: 25000000, status: 'Thành công' },
-                        { id: 'TX002', date: '11 Th10, 19:45', type: 'TRANSFER', title: 'Chuyển tiền mua sắm', counterparty: 'Golden Lotus', amount: -1250000, status: '' },
-                        { id: 'TX003', date: '10 Th10, 14:20', type: 'BILL_PAYMENT', title: 'Thanh toán tiền điện', counterparty: 'EVN Hà Nội', amount: -850000, status: '' },
-                        { id: 'TX004', date: '08 Th10, 09:15', type: 'TRANSFER', title: 'Chuyển khoản từ Nguyễn Văn A', counterparty: 'Hoàn trả tiền cf', amount: 55000, status: '' },
-                    ]);
-                    setLoading(false);
-                }, 800);
-            } catch (error) {
-                console.error("Lỗi khi tải lịch sử:", error);
+                if (!window.ethereum) throw new Error('Không tìm thấy MetaMask. Hãy kết nối ví để xem lịch sử.');
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (!accounts.length) throw new Error('Hãy kết nối ví MetaMask để xem lịch sử giao dịch.');
+                const address = accounts[0];
+                setWalletAddress(address);
+                setTransactions(await txService.getHistory(address));
+            } catch (requestError) {
+                console.error('Lỗi khi tải lịch sử:', requestError);
+                setError(requestError.response?.data?.message || requestError.message || 'Không thể tải lịch sử giao dịch.');
+            } finally {
                 setLoading(false);
             }
         };
+        fetchHistory();
+    }, []);
 
-        if (user?.id) fetchHistory();
-    }, [user]);
-
-    // Hàm chọn Icon và Màu sắc dựa trên loại giao dịch
-    const getTxDetails = (type, amount) => {
-        if (type === 'DEPOSIT' || (type === 'TRANSFER' && amount > 0)) {
-            return { icon: ArrowDownToLine, colorClass: 'icon-deposit' };
+    const showDetail = async (transactionId) => {
+        setDetailLoading(true);
+        try {
+            setSelectedTransaction(await txService.getDetail(transactionId));
+        } catch (detailError) {
+            setError(detailError.response?.data?.message || 'Không thể tải chi tiết giao dịch.');
+        } finally {
+            setDetailLoading(false);
         }
-        if (type === 'BILL_PAYMENT') {
-            return { icon: Zap, colorClass: 'icon-bill' };
-        }
-        return { icon: ArrowUpRight, colorClass: 'icon-transfer' }; // Mặc định cho chuyển đi
     };
 
     return (
-        <div className="history-wrapper">
-            <div className="history-container">
-                {/* Header */}
-                <div className="history-header">
-                    <div>
-                        <h2 className="history-title">Lịch sử giao dịch</h2>
-                        <p className="history-subtitle">Quản lý và theo dõi các hoạt động tài chính của bạn.</p>
-                    </div>
-                </div>
-
-                {/* Bộ lọc (Filters) - Chỉ là UI mô phỏng để giống thiết kế */}
-                <div className="filter-section">
-                    <div className="filter-group">
-                        <span className="filter-label">Thời gian</span>
-                        <div className="filter-buttons">
-                            <button className="btn-filter active">Tháng này</button>
-                            <button className="btn-filter">Tuần này</button>
-                            <button className="btn-filter with-icon">Tùy chọn <Calendar size={14}/></button>
-                        </div>
-                    </div>
-                    
-                    <div className="filter-group">
-                        <span className="filter-label">Loại giao dịch</span>
-                        <div className="filter-buttons outline">
-                            <button className="btn-filter outline active">Tất cả</button>
-                            <button className="btn-filter outline">Tiền vào</button>
-                            <button className="btn-filter outline">Tiền ra</button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Danh sách giao dịch */}
-                <div className="transaction-list-container">
-                    <div className="list-header">
-                        <span className="month-title">Tháng 10, 2023</span>
-                        <span className="month-total">Tổng: +12,450,000 VND</span>
-                    </div>
-
-                    {loading ? (
-                        <div className="loading-state">Đang tải dữ liệu...</div>
-                    ) : transactions.length === 0 ? (
-                        <div className="empty-state">Không có giao dịch nào gần đây.</div>
-                    ) : (
-                        <div className="transaction-list">
-                            {transactions.map((tx) => {
-                                const { icon: TxIcon, colorClass } = getTxDetails(tx.type, tx.amount);
-                                const isPositive = tx.amount > 0;
-
-                                return (
-                                    <div className="tx-item" key={tx.id}>
-                                        <div className="tx-item-left">
-                                            <div className={`tx-icon-wrapper ${colorClass}`}>
-                                                <TxIcon size={20} />
-                                            </div>
-                                            <div className="tx-info">
-                                                <div className="tx-name">{tx.title}</div>
-                                                <div className="tx-meta">
-                                                    {tx.date} • {tx.counterparty}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="tx-item-right">
-                                            <div className={`tx-amount ${isPositive ? 'positive' : 'negative'}`}>
-                                                {isPositive ? '+' : ''}{tx.amount.toLocaleString()} VND
-                                            </div>
-                                            {tx.status && <div className="tx-status">{tx.status}</div>}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                    
-                    {!loading && transactions.length > 0 && (
-                        <button className="btn-load-more">Tải thêm giao dịch...</button>
-                    )}
-                </div>
+        <div className="history-wrapper"><div className="history-container">
+            <div className="history-header"><div><h2 className="history-title">Lịch sử giao dịch</h2><p className="history-subtitle">Các giao dịch SepoliaETH của ví {walletAddress ? shortAddress(walletAddress) : 'MetaMask'}.</p></div></div>
+            <div className="filter-section"><div className="filter-group"><span className="filter-label">Dữ liệu</span><div className="filter-buttons"><button className="btn-filter active" type="button">Tất cả giao dịch</button><button className="btn-filter with-icon" type="button">Đã xác nhận <Calendar size={14} /></button></div></div></div>
+            <div className="transaction-list-container">
+                <div className="list-header"><span className="month-title">Giao dịch on-chain</span><span className="month-total">{transactions.length} giao dịch</span></div>
+                {loading ? <div className="loading-state">Đang tải dữ liệu...</div> : error ? <div className="empty-state">{error}</div> : transactions.length === 0 ? <div className="empty-state">Chưa có giao dịch nào từ ví này.</div> : (
+                    <div className="transaction-list">{transactions.map((tx) => {
+                        const isIncoming = tx.receiverAccount?.toLowerCase() === walletAddress.toLowerCase();
+                        const TxIcon = isIncoming ? ArrowDownToLine : ArrowUpRight;
+                        const counterparty = isIncoming ? tx.senderAccount : tx.receiverAccount;
+                        return <div className="tx-item" key={tx.transactionId}>
+                            <span className="tx-item-left"><span className={`tx-icon-wrapper ${isIncoming ? 'icon-deposit' : 'icon-transfer'}`}><TxIcon size={20} /></span><span className="tx-info"><span className="tx-name">{tx.description || (isIncoming ? 'Nhận SepoliaETH' : 'Chuyển SepoliaETH')}</span><span className="tx-meta">{formatDate(tx.timestamp)} • {shortAddress(counterparty)}</span></span></span>
+                            <span className="tx-item-right"><span className={`tx-amount ${isIncoming ? 'positive' : 'negative'}`}>{isIncoming ? '+' : '-'}{Number(tx.amount).toFixed(4)} SepoliaETH</span><span className="tx-status">{tx.status === 'SUCCESS' ? 'Thành công' : tx.status}</span><button className="btn-tx-detail" type="button" onClick={() => showDetail(tx.transactionId)}>Xem chi tiết</button></span>
+                        </div>;
+                    })}</div>
+                )}
             </div>
+        </div>
+        {(selectedTransaction || detailLoading) && <div className="tx-modal-backdrop" role="presentation" onMouseDown={() => !detailLoading && setSelectedTransaction(null)}>
+            <div className="tx-modal" role="dialog" aria-modal="true" aria-label="Chi tiết giao dịch" onMouseDown={(event) => event.stopPropagation()}>
+                <button type="button" className="tx-modal-close" onClick={() => setSelectedTransaction(null)} disabled={detailLoading} aria-label="Đóng"><X size={20} /></button>
+                <h3>Chi tiết giao dịch</h3>
+                {detailLoading ? <div className="loading-state">Đang tải chi tiết...</div> : <>
+                    <div className="tx-detail-status">{selectedTransaction.status === 'SUCCESS' ? 'Thành công' : selectedTransaction.status}</div>
+                    <div className="tx-detail-grid">
+                        <span>Mã giao dịch</span><strong>#{selectedTransaction.transactionId}</strong>
+                        <span>Thời gian</span><strong>{formatDate(selectedTransaction.timestamp)}</strong>
+                        <span>Số tiền</span><strong>{Number(selectedTransaction.amount).toFixed(4)} SepoliaETH</strong>
+                        <span>Người gửi</span><strong className="tx-detail-break">{selectedTransaction.senderAccount}</strong>
+                        <span>Người nhận</span><strong className="tx-detail-break">{selectedTransaction.receiverAccount}</strong>
+                        <span>Nội dung</span><strong>{selectedTransaction.description || 'Không có nội dung'}</strong>
+                        <span>Tx hash</span><strong className="tx-detail-break">{selectedTransaction.onChainTxHash || 'Chưa có'}</strong>
+                        <span>Block hash</span><strong className="tx-detail-break">{selectedTransaction.blockHash}</strong>
+                    </div>
+                </>}
+            </div>
+        </div>}
         </div>
     );
 };

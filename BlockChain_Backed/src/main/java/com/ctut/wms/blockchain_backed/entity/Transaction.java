@@ -15,10 +15,10 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionId;
 
-    @Column(length = 20)
+    @Column(length = 100)
     private String senderAccount;
 
-    @Column(length = 20)
+    @Column(length = 100)
     private String receiverAccount;
 
     // --- CÁC TRƯỜNG BỔ SUNG CHO UI TRANSFER & STATISTICS ---

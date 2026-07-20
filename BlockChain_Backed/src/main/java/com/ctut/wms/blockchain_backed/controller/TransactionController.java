@@ -63,6 +63,26 @@ public class TransactionController {
     }
 
     /**
+     * Lưu lịch sử của giao dịch MetaMask sau khi giao dịch đã được xác nhận on-chain.
+     * POST /api/transactions/on-chain
+     */
+    @PostMapping("/on-chain")
+    public ResponseEntity<?> recordOnChainTransfer(@RequestBody Map<String, Object> requestData) {
+        try {
+            Transaction transaction = transactionService.recordOnChainTransfer(
+                    requestData.get("senderWallet").toString(),
+                    requestData.get("receiverWallet").toString(),
+                    new BigDecimal(requestData.get("amount").toString()),
+                    requestData.getOrDefault("description", "").toString(),
+                    requestData.get("onChainTxHash").toString()
+            );
+            return ResponseEntity.ok(transaction);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Không thể lưu lịch sử giao dịch: " + e.getMessage());
+        }
+    }
+
+    /**
      * API 2: Lấy toàn bộ danh sách khối (Sổ cái Blockchain)
      * GET /api/transactions/ledger
      */
@@ -98,6 +118,14 @@ public class TransactionController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/{transactionId}")
+    public ResponseEntity<?> getTransactionDetail(@PathVariable Long transactionId) {
+        return transactionRepository.findById(transactionId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/pay-bill")
     public ResponseEntity<?> payBill(@RequestBody Map<String, Object> request) {
         try {

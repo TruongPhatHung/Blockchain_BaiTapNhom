@@ -151,3 +151,12 @@
     background-color: #1d4ed8;
     box-shadow: 0 6px 10px rgba(37, 99, 235, 0.3);
 }
+
+.ep-avatar-section { display: flex; align-items: center; gap: 18px; padding-bottom: 24px; border-bottom: 1px solid #f1f5f9; }
+.ep-avatar-preview { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid #dbeafe; }
+.ep-avatar-fallback { display: grid; place-items: center; color: white; font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+.ep-avatar-section p { margin: 5px 0 10px; color: #64748b; font-size: 13px; }
+.ep-upload-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; color: #2563eb; background: #eff6ff; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ep-upload-btn input { display: none; }
+.ep-message { border-radius: 8px; padding: 10px 12px; color: #b91c1c; background: #fef2f2; font-size: 14px; }
+@media (max-width: 480px) { .ep-card { padding: 20px; } .ep-avatar-section { align-items: flex-start; flex-direction: column; } }

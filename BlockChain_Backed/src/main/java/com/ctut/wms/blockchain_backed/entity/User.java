@@ -37,7 +37,7 @@ public class User {
     @Column(length = 20)
     private String phoneNumber;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String avatarUrl; // Đường dẫn ảnh đại diện
 
     @Column(name = "is_biometric_enabled")

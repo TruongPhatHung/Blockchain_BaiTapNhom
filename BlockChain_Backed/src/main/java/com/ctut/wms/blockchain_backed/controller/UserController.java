@@ -39,6 +39,9 @@ public class UserController {
             if (updates.containsKey("email")) {
                 user.setEmail(updates.get("email").toString());
             }
+            if (updates.containsKey("fullName")) {
+                user.setFullName(updates.get("fullName").toString());
+            }
             if (updates.containsKey("phoneNumber")) {
                 user.setPhoneNumber(updates.get("phoneNumber").toString());
             }

@@ -1,13 +1,20 @@
 // src/pages/User/Settings.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../store/AuthContext';
-import { ChevronRight, Edit3, Lock, Shield, Fingerprint, Bell, Megaphone, Globe } from 'lucide-react';
+// ĐÃ SỬA: Import thêm icon Wallet cho ví MetaMask
+import { ChevronRight, Edit3, Lock, Shield, Fingerprint, Bell, Megaphone, Globe, Wallet } from 'lucide-react';
+// ĐÃ SỬA: Import dịch vụ blockchain
+import { blockchainService } from '../../services/blockchain.service';
 import './Settings.css';
 
 const Settings = () => {
     const { user, token, updateUser } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    // --- STATE MỚI CHO METAMASK ---
+    const [walletAddress, setWalletAddress] = useState(null);
+    const [isConnecting, setIsConnecting] = useState(false);
 
     // Lấy chữ cái đầu làm Avatar
     const avatarLetter = user?.username ? user.username.charAt(0).toUpperCase() : 'U';
@@ -22,7 +29,7 @@ const Settings = () => {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Gửi kèm token nếu có bảo mật
+                    'Authorization': `Bearer ${token}` 
                 },
                 body: JSON.stringify({
                     [settingKey]: newValue
@@ -30,13 +37,27 @@ const Settings = () => {
             });
 
             if (response.ok) {
-                // Cập nhật lại Context
                 updateUser({ [settingKey]: newValue });
             } else {
                 alert('Không thể lưu cấu hình cài đặt.');
             }
         } catch (error) {
             console.error('Lỗi khi lưu cài đặt:', error);
+        }
+    };
+
+    // --- HÀM MỚI: XỬ LÝ KẾT NỐI METAMASK ---
+    const handleConnectMetaMask = async () => {
+        setIsConnecting(true);
+        try {
+            const result = await blockchainService.connectWallet();
+            setWalletAddress(result.address);
+            alert("Kết nối ví thành công!");
+            // Sau này bạn có thể gọi thêm API để lưu địa chỉ ví này vào Database (bảng User) nếu muốn
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setIsConnecting(false);
         }
     };
 
@@ -60,11 +81,10 @@ const Settings = () => {
                         </div>
                         
                         <div className="st-profile-header">
-                            <div className="st-avatar-circle">{user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" /> : avatarLetter}</div>
+                            <div className="st-avatar-circle">{avatarLetter}</div>
                             <button className="btn-change-avatar">Thay đổi ảnh</button>
                         </div>
 
-                        {/* ĐÃ SỬA: Xóa bỏ các ChevronRight, đổi class sang static-item */}
                         <div className="st-list">
                             <div className="st-list-item static-item">
                                 <div className="st-item-content">
@@ -81,7 +101,6 @@ const Settings = () => {
                             <div className="st-list-item static-item">
                                 <div className="st-item-content">
                                     <span className="st-label">Số điện thoại</span>
-                                    {/* Sử dụng phoneNumber đồng bộ backend */}
                                     <span className="st-value">{user?.phoneNumber || 'Chưa cập nhật số ĐT'}</span>
                                 </div>
                             </div>
@@ -106,6 +125,44 @@ const Settings = () => {
 
                 {/* Cột Phải */}
                 <div className="settings-col">
+
+                    {/* --- ĐÃ BỔ SUNG: THẺ KẾT NỐI VÍ WEB3 & BLOCKCHAIN --- */}
+                    <div className="st-card">
+                        <h3 className="st-card-title">Web3 & Blockchain</h3>
+                        <div className="st-list">
+                            <div className="st-list-item">
+                                <div className="st-item-icon-wrapper" style={{ backgroundColor: '#f6851b', color: 'white' }}>
+                                    <Wallet size={18} />
+                                </div>
+                                <div className="st-item-content">
+                                    <span className="st-label-main">Ví MetaMask</span>
+                                    <span className="st-desc">
+                                        {walletAddress 
+                                            ? `Đã kết nối: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` 
+                                            : 'Dùng để ký giao dịch chuyển tiền'}
+                                    </span>
+                                </div>
+                                <button 
+                                    onClick={handleConnectMetaMask}
+                                    disabled={isConnecting || walletAddress !== null}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: walletAddress ? '#d1d5db' : '#f6851b',
+                                        color: walletAddress ? '#4b5563' : 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: walletAddress ? 'default' : 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '13px'
+                                    }}
+                                >
+                                    {isConnecting ? 'Đang chờ...' : (walletAddress ? 'Đã kết nối' : 'Kết nối')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {/* ---------------------------------------------------- */}
+
                     {/* Thẻ Bảo mật */}
                     <div className="st-card">
                         <h3 className="st-card-title">Bảo mật</h3>
@@ -170,7 +227,6 @@ const Settings = () => {
                                     <span className="st-desc">Tin tức từ Ngân hàng</span>
                                 </div>
                                 <label className="st-toggle">
-                                    {/* Ví dụ toggles phụ chưa có trên database, có thể giữ state hoặc kết nối tùy ý */}
                                     <input type="checkbox" defaultChecked={false} />
                                     <span className="slider"></span>
                                 </label>

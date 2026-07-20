@@ -125,6 +125,41 @@ public class TransactionService {
     }
 
     /**
+     * Lưu giao dịch đã được xác nhận trên MetaMask/Sepolia. Luồng này tách biệt
+     * với chuyển khoản nội bộ VND vì địa chỉ ví Ethereum không phải số tài khoản.
+     */
+    @Transactional
+    public Transaction recordOnChainTransfer(String senderWallet, String receiverWallet,
+                                             BigDecimal amount, String description,
+                                             String onChainTxHash) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Số tiền giao dịch phải lớn hơn 0");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        String previousHash = transactionRepository.findLastTransaction()
+                .map(Transaction::getBlockHash)
+                .orElse("GENESIS");
+
+        Transaction transaction = new Transaction();
+        transaction.setSenderAccount(senderWallet);
+        transaction.setReceiverAccount(receiverWallet);
+        transaction.setReceiverBankName("Sepolia");
+        transaction.setCategory("ON_CHAIN_TRANSFER");
+        transaction.setAmount(amount);
+        transaction.setTransactionType("ON_CHAIN_TRANSFER");
+        transaction.setDescription(description);
+        transaction.setStatus("SUCCESS");
+        transaction.setOnChainTxHash(onChainTxHash);
+        transaction.setTimestamp(now);
+        transaction.setPreviousHash(previousHash);
+        transaction.setBlockHash(BlockchainUtil.calculateHash(
+                senderWallet, receiverWallet, amount.toPlainString(), now.toString(), previousHash));
+
+        return transactionRepository.save(transaction);
+    }
+
+    /**
      * Hàm chạy kiểm tra tính toàn vẹn của toàn bộ sổ cái (Dành cho Admin)
      */
     public boolean verifyBlockchainIntegrity() {

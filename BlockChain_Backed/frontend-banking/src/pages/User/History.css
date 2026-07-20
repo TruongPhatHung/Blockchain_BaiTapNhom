@@ -263,3 +263,61 @@
     color: #6b7280;
     font-size: 15px;
 }
+
+.tx-item-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-tx-detail {
+    margin-top: 4px;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 5px 9px;
+    background: #eff6ff;
+    color: #2563eb;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-tx-detail:hover { background: #dbeafe; }
+
+.tx-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .45);
+}
+
+.tx-modal {
+    position: relative;
+    width: min(640px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 28px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, .25);
+}
+
+.tx-modal h3 { margin: 0 0 18px; color: #111827; }
+.tx-modal-close { position: absolute; right: 16px; top: 16px; border: 0; background: transparent; color: #64748b; cursor: pointer; }
+.tx-detail-status { display: inline-block; margin-bottom: 18px; padding: 4px 10px; border-radius: 999px; color: #047857; background: #d1fae5; font-size: 13px; font-weight: 700; }
+.tx-detail-grid { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 14px 18px; font-size: 14px; }
+.tx-detail-grid > span { color: #64748b; }
+.tx-detail-grid strong { color: #1f2937; text-align: right; }
+.tx-detail-break { overflow-wrap: anywhere; }
+
+@media (max-width: 560px) {
+    .tx-detail-grid { grid-template-columns: 1fr; gap: 4px; }
+    .tx-detail-grid strong { text-align: left; margin-bottom: 12px; }
+}

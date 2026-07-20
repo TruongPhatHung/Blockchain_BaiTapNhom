@@ -2,6 +2,7 @@ package com.ctut.wms.blockchain_backed.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,16 +49,16 @@ public class SecurityConfig {
 
                         // Cả STAFF và ADMIN đều có thể truy cập API của nhân viên
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*/settings").permitAll()
                         .requestMatchers("/api/users/**")
                         .hasAnyRole("USER", "STAFF", "ADMIN")
                         // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
                         // BỔ SUNG: Thêm các endpoint mới cho thông báo, user, danh bạ
+                        .requestMatchers("/api/transactions/**").permitAll()
                         .requestMatchers(
                                 "/api/user/**",
-                                "/api/transactions/**",
                                 "/api/statistics/**",
                                 "/api/notifications/**",
-                                "/api/users/**",
                                 "/api/beneficiaries/**"
                         ).hasAnyRole("USER", "STAFF", "ADMIN")
 
