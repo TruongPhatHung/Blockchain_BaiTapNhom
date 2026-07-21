@@ -1,6 +1,7 @@
 package com.ctut.wms.blockchain_backed.service;
 
 import com.ctut.wms.blockchain_backed.entity.Account;
+import com.ctut.wms.blockchain_backed.entity.Notification;
 import com.ctut.wms.blockchain_backed.entity.Transaction;
 import com.ctut.wms.blockchain_backed.repository.AccountRepository;
 import com.ctut.wms.blockchain_backed.repository.NotificationRepository;
@@ -99,27 +100,28 @@ public class TransactionService {
             throw new RuntimeException("Giao dịch này đã được xử lý!");
         }
 
-        // BÂY GIỜ MỚI TIẾN HÀNH TRỪ VÀ CỘNG TIỀN THỰC TẾ
-        Account sender = accountRepository.findByAccountNumber(tx.getSenderAccount()).get();
-        Account receiver = accountRepository.findByAccountNumber(tx.getReceiverAccount()).get();
-
+        // 1. Trừ tiền người gửi
+        Account sender = accountRepository.findByAccountNumber(tx.getSenderAccount())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người gửi"));
         sender.setBalance(sender.getBalance().subtract(tx.getAmount()));
-        receiver.setBalance(receiver.getBalance().add(tx.getAmount()));
-
         accountRepository.save(sender);
-        accountRepository.save(receiver);
 
-        // Cập nhật trạng thái thành công
+        // 2. An toàn: Chỉ cộng tiền & tạo thông báo nếu người nhận thuộc ngân hàng nội bộ
+        accountRepository.findByAccountNumber(tx.getReceiverAccount()).ifPresent(receiver -> {
+            receiver.setBalance(receiver.getBalance().add(tx.getAmount()));
+            accountRepository.save(receiver);
+
+            Notification notification = new Notification();
+            notification.setUser(receiver.getUser());
+            notification.setTitle("Biến động số dư");
+            notification.setMessage("Tài khoản " + receiver.getAccountNumber() + " vừa nhận được +" + tx.getAmount() + " VND từ " + sender.getAccountNumber());
+            notification.setIsRead(false);
+            notificationRepository.save(notification);
+        });
+
+        // 3. Cập nhật trạng thái giao dịch
         tx.setStatus("SUCCESS");
-        tx.setOnChainTxHash(onChainTxHash); // Lưu bằng chứng giao dịch MetaMask
-
-        com.ctut.wms.blockchain_backed.entity.Notification notification = new com.ctut.wms.blockchain_backed.entity.Notification();
-        notification.setUser(receiver.getUser()); // Gắn thông báo này cho chủ tài khoản nhận
-        notification.setTitle("Biến động số dư");
-        notification.setMessage("Tài khoản " + receiver.getAccountNumber() + " vừa nhận được +" + tx.getAmount() + " VND từ " + sender.getAccountNumber());
-        notification.setIsRead(false); // Trạng thái chưa đọc
-
-        notificationRepository.save(notification);
+        tx.setOnChainTxHash(onChainTxHash);
 
         return transactionRepository.save(tx);
     }
@@ -275,5 +277,29 @@ public class TransactionService {
         newTransaction.setBlockHash(newBlockHash);
 
         return transactionRepository.save(newTransaction);
+    }
+    /**
+     * Lấy toàn bộ danh sách giao dịch thô từ cơ sở dữ liệu (Dành cho trang Quản trị Database Editor)
+     */
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
+    }
+    /**
+
+     * Cố tình ghi đè amount/description nhưng KHÔNG tính lại blockHash để mô phỏng bị hack.
+     */
+    @Transactional
+    public void tamperTransactionData(Long txId, BigDecimal newAmount, String newDescription) {
+        Transaction tx = transactionRepository.findById(txId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch ID: " + txId));
+
+        if (newAmount != null) {
+            tx.setAmount(newAmount);
+        }
+        if (newDescription != null) {
+            tx.setDescription(newDescription);
+        }
+
+        transactionRepository.save(tx);
     }
 }

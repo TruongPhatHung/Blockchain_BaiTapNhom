@@ -1,16 +1,24 @@
 package com.ctut.wms.blockchain_backed.entity;
+
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
-@Setter
 @Getter
+@Setter
+@NoArgsConstructor  // Bổ sung: Constructor không tham số cho JPA
+@AllArgsConstructor // Bổ sung: Constructor đầy đủ tham số
 @Entity
 @Table(name = "transactions")
 public class Transaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionId;
@@ -44,7 +52,7 @@ public class Transaction {
     private String onChainTxHash;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp;
 
     @Column(nullable = false, length = 64)
     private String previousHash;
@@ -52,7 +60,38 @@ public class Transaction {
     @Column(nullable = false, length = 64)
     private String blockHash;
 
-    //  PHÍ GIAO DỊCH ---
+    // --- PHÍ GIAO DỊCH ---
     @Column(precision = 18, scale = 2)
-    private BigDecimal fee = BigDecimal.ZERO; // Mặc định phí là 0, phục vụ hiển thị trên UI
+    private BigDecimal fee = BigDecimal.ZERO;
+
+    // Tự động gán thời gian ngay trước khi lưu mới vào Database
+    @PrePersist
+    protected void onCreate() {
+        if (this.timestamp == null) {
+            this.timestamp = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * HÀM BỔ SUNG: Tự tính toán mã băm SHA-256 dựa trên dữ liệu của khối
+     * Phục vụ cho hàm verifyBlockchainIntegrity() ở Backend vô cùng tiện lợi!
+     */
+    public String calculateHash() {
+        String dataToHash = previousHash +
+                (senderAccount != null ? senderAccount : "") +
+                (receiverAccount != null ? receiverAccount : "") +
+                amount.toPlainString() +
+                (description != null ? description : "");
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
+            StringBuilder builder = new StringBuilder();
+            for (byte b : bytes) {
+                builder.append(String.format("%02x", b));
+            }
+            return builder.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi tính toán mã Hash!", e);
+        }
+    }
 }

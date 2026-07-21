@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -29,8 +30,11 @@ public class StaffController {
     // API: Xem danh sách toàn bộ khách hàng
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
-        // Thực tế nên phân trang, ở đây lấy tất cả user có role là 'USER'
-        return ResponseEntity.ok(userRepository.findAll());
+        // ĐÃ SỬA: Chỉ lọc và trả về những người dùng có quyền 'USER'
+        List<User> customers = userRepository.findAll().stream()
+                .filter(user -> "USER".equals(user.getRole()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(customers);
     }
 
     // API: Xem chi tiết tài khoản của khách hàng
@@ -48,7 +52,6 @@ public class StaffController {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-            // Chỉ chấp nhận 'ACTIVE' hoặc 'LOCKED'
             if (!status.equals("ACTIVE") && !status.equals("LOCKED")) {
                 return ResponseEntity.badRequest().body("Trạng thái không hợp lệ.");
             }
@@ -65,20 +68,26 @@ public class StaffController {
     @PostMapping("/transactions/reverse")
     public ResponseEntity<?> reverseTransaction(@RequestBody Map<String, Object> request) {
         try {
-            // Lệnh hoàn tác bản chất là một lệnh chuyển tiền đặc biệt
-            // Từ tài khoản B (người nhận sai) trả lại tiền cho A (người gửi)
+            // ĐÃ SỬA: Kiểm tra dữ liệu đầu vào để tránh lỗi NullPointerException làm sập server
+            if (!request.containsKey("originalReceiverAccount") ||
+                    !request.containsKey("originalSenderAccount") ||
+                    !request.containsKey("amount")) {
+                return ResponseEntity.badRequest().body("Thiếu thông tin giao dịch cần hoàn tác!");
+            }
+
             String senderToReverse = request.get("originalReceiverAccount").toString();
             String receiverToCredit = request.get("originalSenderAccount").toString();
             BigDecimal amountToReverse = new BigDecimal(request.get("amount").toString());
-            String errorTxId = request.get("originalTransactionId").toString();
+
+            String errorTxId = request.containsKey("originalTransactionId")
+                    ? request.get("originalTransactionId").toString()
+                    : "N/A";
 
             String description = "LỆNH HOÀN TÁC cho giao dịch lỗi ID: " + errorTxId;
+            String receiverBankName = "Lumina Bank";
+            String category = "HOAN_TIEN";
 
-            // --- BỔ SUNG THÊM 2 THAM SỐ ĐỂ KHỚP VỚI TRANSACTION SERVICE ---
-            String receiverBankName = "Lumina Bank"; // Hoàn tiền nội bộ
-            String category = "HOAN_TIEN";           // Phân loại danh mục
-
-            // Gọi TransactionService để thực hiện chuyển tiền ngược lại với ĐẦY ĐỦ 6 THAM SỐ
+            // LƯU Ý: Hiện tại hàm này vẫn đang gọi transferMoney (sẽ tạo giao dịch PENDING chờ MetaMask).
             com.ctut.wms.blockchain_backed.entity.Transaction reversedBlock = transactionService.transferMoney(
                     senderToReverse,
                     receiverToCredit,

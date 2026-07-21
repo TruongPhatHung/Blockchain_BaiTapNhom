@@ -1,0 +1,84 @@
+/* src/pages/Admin/DatabaseEditor.css */
+.db-editor-container {
+    padding: 20px;
+    font-family: monospace; /* Font chữ kiểu code/terminal */
+    background-color: #fafafa;
+    min-height: 100vh;
+}
+
+.db-editor-header {
+    background-color: #7f1d1d; /* Màu đỏ sẫm cảnh báo */
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.db-editor-title {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+}
+
+.db-editor-subtitle {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.db-table th, .db-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.db-table th {
+    background-color: #f1f5f9;
+    font-weight: bold;
+    color: #475569;
+}
+
+.tamper-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.tamper-input:focus {
+    border-color: #ef4444;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.btn-save-tamper {
+    padding: 8px 12px;
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    transition: background-color 0.2s;
+}
+
+.btn-save-tamper:hover {
+    background-color: #b91c1c;
+}
+
+.btn-save-tamper:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

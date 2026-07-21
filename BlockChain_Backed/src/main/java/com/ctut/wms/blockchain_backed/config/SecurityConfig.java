@@ -1,5 +1,6 @@
 package com.ctut.wms.blockchain_backed.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -21,40 +23,57 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // 1. Cấu hình công cụ mã hóa mật khẩu (BCrypt)
+    // Inject JWT filter để xử lý token trong mỗi request
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
+    // Mã hóa password bằng BCrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 2. Cấu hình quản lý xác thực (Dùng để gọi hàm Login sau này)
+    // Cung cấp AuthenticationManager cho quá trình xác thực
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    // 3. Cấu hình bộ lọc bảo mật chính (Phân quyền và Rules)
+    // Cấu hình bảo mật chính
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // Cấu hình CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // Tắt CSRF (dùng JWT nên không cần)
                 .csrf(csrf -> csrf.disable())
+
+                // Không sử dụng session (stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Phân quyền API
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép tất cả mọi người truy cập API auth (Đăng nhập, Đăng ký)
+                        // Public endpoints
                         .requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
 
-                        // Chỉ ADMIN mới được truy cập các API bắt đầu bằng /api/admin/
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Admin only
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
-                        // Cả STAFF và ADMIN đều có thể truy cập API của nhân viên
+                        // Staff & Admin
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
+
+                        // User settings
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/settings").permitAll()
-                        .requestMatchers("/api/users/**")
-                        .hasAnyRole("USER", "STAFF", "ADMIN")
-                        // Khách hàng (USER) và cả hệ thống đều có thể dùng các API chung
-                        // BỔ SUNG: Thêm các endpoint mới cho thông báo, user, danh bạ
+
+                        // Users (⚠ currently permitAll trước -> rule dưới sẽ không chạy)
+                        .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/users/**").hasAnyAuthority("USER", "STAFF", "ADMIN")
+
+                        // Transactions (public)
                         .requestMatchers("/api/transactions/**").permitAll()
+
+                        // Các API yêu cầu đăng nhập
                         .requestMatchers(
                                 "/api/user/**",
                                 "/api/statistics/**",
@@ -62,17 +81,21 @@ public class SecurityConfig {
                                 "/api/beneficiaries/**"
                         ).hasAnyRole("USER", "STAFF", "ADMIN")
 
-                        // Bất kỳ Request nào khác ngoài các mục trên đều bắt buộc phải đăng nhập
+                        // Các request còn lại phải xác thực
                         .anyRequest().authenticated()
-                );
+                )
+
+                // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 4. Cấu hình CORS để cho phép ReactJS gọi API
+    // Cấu hình CORS cho frontend (Vite chạy port 5173)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
@@ -80,6 +103,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }

@@ -25,15 +25,20 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(false);
     }, []);
 
-    const login = (userData, authToken) => {
-        setUser(userData);
-        setToken(authToken);
-        localStorage.setItem('user', JSON.stringify(userData));
-        if (authToken) {
-            localStorage.setItem('token', authToken);
+    // Sửa lại hàm login nhận nguyên object { token, user } từ Backend
+    const login = (authData) => {
+        const { token, user } = authData;
+
+        setUser(user);
+        setToken(token);
+
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+        if (token) {
+            localStorage.setItem('token', token);
         }
     };
-
     const logout = () => {
         setUser(null);
         setToken(null);

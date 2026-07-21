@@ -10,7 +10,7 @@ const SupportTickets = () => {
     useEffect(() => {
         const fetchTickets = async () => {
             try {
-                const data = await staffService.getPendingTickets();
+                const data = await staffService.getSupportTickets();
                 setTickets(data);
             } catch (error) {
                 console.error("Lỗi lấy danh sách sự cố:", error);

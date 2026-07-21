@@ -16,12 +16,21 @@ const Login = () => {
         e.preventDefault();
         setError('');
         try {
+            // data nhận về từ Backend có dạng: { token: "...", user: {...} }
             const data = await authService.login(username, password);
+
+            // Gọi login từ AuthContext (AuthContext sẽ tự lưu user & token vào localStorage)
             login(data);
-            
-            if (data.role === 'ADMIN') navigate('/admin/ledger');
-            else if (data.role === 'STAFF') navigate('/staff/users');
-            else navigate('/dashboard');
+
+            // Chuyển hướng theo role
+            const userRole = data.user?.role ? data.user.role.toUpperCase() : '';
+            if (userRole.includes('ADMIN')) {
+                navigate('/admin/ledger');
+            } else if (userRole.includes('STAFF')) {
+                navigate('/staff/users');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error("Lỗi đăng nhập:", err);
             setError('Sai tên đăng nhập hoặc mật khẩu!');
