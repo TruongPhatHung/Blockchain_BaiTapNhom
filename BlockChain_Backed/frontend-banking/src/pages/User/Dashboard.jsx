@@ -2,23 +2,48 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from "../../store/AuthContext";
 import { 
-    Eye, EyeOff, Send, PlusCircle, CreditCard, 
-    TrendingUp, TrendingDown, Music, ShoppingBag, Briefcase 
+    Eye, EyeOff, ArrowUpRight, ArrowDownLeft, FileText,
+    TrendingUp, TrendingDown, Wifi, Cpu, Copy, Check
 } from 'lucide-react';
+import txService from '../../services/tx.service';
 import './Dashboard.css';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
-    const navigate = useNavigate(); // Hook để chuyển trang
+    const navigate = useNavigate();
     
     // --- STATE QUẢN LÝ DỮ LIỆU ---
     const [showBalance, setShowBalance] = useState(true);
-    const [walletAddress, setWalletAddress] = useState("Đang tải...");
-    const [walletBalance, setWalletBalance] = useState("0.0000");
+    const [walletAddress, setWalletAddress] = useState("Chưa kết nối");
+    const [walletBalance, setWalletBalance] = useState("0.000"); // Đổi mặc định thành 3 số 0
     const [isConnecting, setIsConnecting] = useState(false);
     
-    // State cho Lịch sử giao dịch (Dữ liệu thật/giả lập)
+    // State cho Lịch sử giao dịch thật & Thống kê
     const [transactions, setTransactions] = useState([]);
+    const [isLoadingTx, setIsLoadingTx] = useState(false);
+    const [monthlyIncome, setMonthlyIncome] = useState(0);
+    const [monthlyExpense, setMonthlyExpense] = useState(0);
+
+    // State quản lý trạng thái nút copy
+    const [isCopied, setIsCopied] = useState(false);
+
+    // Hàm xử lý sao chép địa chỉ ví
+    const handleCopyAddress = () => {
+        if (walletAddress !== "Chưa kết nối") {
+            navigator.clipboard.writeText(walletAddress);
+            setIsCopied(true);
+            
+            // Tự động quay lại icon Copy sau 2 giây
+            setTimeout(() => {
+                setIsCopied(false);
+            }, 2000);
+        }
+    };
+
+    // Lấy ngày tháng hiện tại bằng tiếng Việt
+    const currentDate = new Intl.DateTimeFormat('vi-VN', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    }).format(new Date());
 
     // --- CÁC HÀM XỬ LÝ METAMASK ---
     const fetchBalance = async (account) => {
@@ -28,25 +53,29 @@ const Dashboard = () => {
                 params: [account, 'latest']
             });
             const balanceInWei = BigInt(balanceHex);
-            const balanceInEth = (Number(balanceInWei) / 1e18).toFixed(4);
+            // Cập nhật thành toFixed(3) để đồng bộ với ví MetaMask (ví dụ: 0.100)
+            const balanceInEth = (Number(balanceInWei) / 1e18).toFixed(3);
             setWalletBalance(balanceInEth);
         } catch (error) {
             console.error("Lỗi lấy số dư:", error);
         }
     };
 
-   const checkWalletConnection = async () => {
+    const checkWalletConnection = async () => {
         if (typeof window.ethereum !== 'undefined') {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (accounts.length > 0) {
                     const account = accounts[0];
-                    // BỎ cắt chuỗi, lưu trực tiếp toàn bộ địa chỉ ví
                     setWalletAddress(account);
                     fetchBalance(account); 
+                    fetchDashboardTransactions(account); // Lấy giao dịch & tính thống kê
                 } else {
                     setWalletAddress("Chưa kết nối");
-                    setWalletBalance("0.0000");
+                    setWalletBalance("0.000");
+                    setTransactions([]);
+                    setMonthlyIncome(0);
+                    setMonthlyExpense(0);
                 }
             } catch (error) {
                 console.error("Lỗi kiểm tra ví:", error);
@@ -60,9 +89,9 @@ const Dashboard = () => {
                 setIsConnecting(true);
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
-                // BỎ cắt chuỗi, lưu trực tiếp toàn bộ địa chỉ ví
                 setWalletAddress(account);
                 fetchBalance(account);
+                fetchDashboardTransactions(account); 
             } catch (error) {
                 console.error("Lỗi kết nối:", error);
             } finally {
@@ -72,68 +101,59 @@ const Dashboard = () => {
             alert("Vui lòng cài đặt MetaMask!");
         }
     };
-    // --- HÀM XỬ LÝ ĐỒNG BỘ NÚT BẤM ---
-    const handleSync = async () => {
-        // Kiểm tra xem đã có địa chỉ ví chưa
-        if (walletAddress !== "Chưa kết nối" && walletAddress !== "Đang tải...") {
-            setIsConnecting(true); // Đổi trạng thái nút thành "Đang xử lý..."
-            await fetchBalance(walletAddress); // Gọi trực tiếp hàm lấy số dư
-            setIsConnecting(false); // Trả lại trạng thái bình thường
-        } else {
-            // Nếu chưa kết nối thì tiến hành kết nối
-            connectWallet();
-        }
-    };
 
-    // --- CƠ CHẾ NẠP TIỀN THÔNG MINH ---
-    const handleDeposit = () => {
-        if (walletAddress === "Chưa kết nối" || walletAddress === "Đang tải...") {
-            connectWallet();
-        } else {
-            // Sau này bạn có thể mở một Modal chứa QR Code ở đây
-            alert(`Để nạp tiền, vui lòng chuyển SepoliaETH mạng Web3 vào ví: \n${walletAddress}`);
-        }
-    };
-
-    // --- LẤY DỮ LIỆU LỊCH SỬ GIAO DỊCH TỪ BACKEND ---
-    const fetchTransactions = async () => {
+    // --- LẤY DỮ LIỆU LỊCH SỬ TỪ BACKEND & TÍNH TOÁN THỐNG KÊ ---
+    const fetchDashboardTransactions = async (address) => {
+        setIsLoadingTx(true);
         try {
-            // TODO: Thay thế bằng API thật của bạn
-            // const response = await axios.get('/api/transactions');
-            // setTransactions(response.data);
+            const historyData = await txService.getHistory(address);
             
-            // Giả lập dữ liệu trả về từ API để làm UI
-            const mockData = [
-                { id: 1, title: 'Apple Music', time: 'Hôm nay, 10:42 AM', amount: -9.99, type: 'expense', icon: 'music' },
-                { id: 2, title: 'Tạp hóa', time: 'Hôm nay, 08:15 AM', amount: -45.20, type: 'expense', icon: 'shopping' },
-                { id: 3, title: 'Lương', time: 'Hôm qua, 05:00 PM', amount: 3200.00, type: 'income', icon: 'work' },
-            ];
-            setTransactions(mockData);
-        } catch (error) {
-            console.error("Lỗi tải giao dịch:", error);
-        }
-    };
+            // Lấy thời gian tháng hiện tại
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            let income = 0;
+            let expense = 0;
 
-    // Hàm phụ trợ để render Icon động dựa trên loại giao dịch
-    const renderTxIcon = (type) => {
-        switch(type) {
-            case 'music': return <Music size={18} className="text-blue-500" />;
-            case 'shopping': return <ShoppingBag size={18} className="text-blue-500" />;
-            case 'work': return <Briefcase size={18} className="text-green-500" />;
-            default: return <CreditCard size={18} />;
+            // Tính toán thu nhập và chi tiêu của tháng này
+            historyData.forEach(tx => {
+                const txDate = new Date(tx.timestamp);
+                
+                // Chỉ tính các giao dịch trong tháng hiện tại và có trạng thái SUCCESS
+                if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear && tx.status === 'SUCCESS') {
+                    const isIncoming = tx.receiverAccount?.toLowerCase() === address.toLowerCase();
+                    if (isIncoming) {
+                        income += Number(tx.amount);
+                    } else {
+                        expense += Number(tx.amount);
+                    }
+                }
+            });
+
+            setMonthlyIncome(income);
+            setMonthlyExpense(expense);
+            
+            // Chỉ lấy 5 giao dịch gần nhất để hiển thị
+            const recentTxs = historyData.slice(0, 5);
+            setTransactions(recentTxs);
+        } catch (error) {
+            console.error("Lỗi tải giao dịch từ backend:", error);
+            setTransactions([]);
+        } finally {
+            setIsLoadingTx(false);
         }
     };
 
     // --- EFFECT KHỞI TẠO ---
     useEffect(() => {
         checkWalletConnection();
-        fetchTransactions();
 
         if (typeof window.ethereum !== 'undefined') {
-            const handleAccountsChanged = (accounts) => checkWalletConnection();
-            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            const handleAccountsChanged = () => checkWalletConnection();
+            window.ethereum.on('accountsChanged', handleAccountsChanged)
             return () => window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -141,47 +161,57 @@ const Dashboard = () => {
             {/* Header */}
             <div className="dashboard-header flex-header">
                 <div>
-                    <h1 className="welcome-text">Chào mừng trở lại, {user?.username || 'hungsayhi'}!</h1>
-                    <p className="subtitle">Đây là tổng quan tài chính của bạn hôm nay.</p>
+                    <h1 className="welcome-text">Chào mừng trở lại, {user?.fullName || user?.username }!</h1>
+                    <p className="subtitle">Cập nhật tổng quan tài chính của bạn hôm nay.</p>
                 </div>
                 
-                {/* --- NÚT KẾT NỐI / ĐỒNG BỘ METAMASK --- */}
-                {/* Đã bỏ điều kiện ẩn nút, nút sẽ luôn luôn hiển thị */}
-                <button 
-                    className="connect-wallet-btn" 
-                    onClick={handleSync}
-                    disabled={isConnecting}
-                >
-                    {isConnecting ? 'Đang xử lý...' : (
-                        (walletAddress === "Chưa kết nối" || walletAddress === "Đang tải...") 
-                        ? '🦊 Kết nối MetaMask' 
-                        : '🔄 Đồng bộ ví'
-                    )}
-                </button>
+                <div className="header-actions">
+                    <div className="date-badge">{currentDate}</div>
+                    <button className="connect-wallet-btn" onClick={connectWallet} disabled={isConnecting}>
+                        {isConnecting ? 'Đang xử lý...' : (walletAddress === "Chưa kết nối" ? '🦊 Kết nối Ví' : '🔄 Đồng bộ')}
+                    </button>
+                </div>
             </div>
 
             <div className="dashboard-grid">
                 {/* --- CỘT TRÁI (MAIN) --- */}
                 <div className="main-column">
                     
-                    {/* Thẻ số dư (Balance Card) */}
+                    {/* Thẻ Ngân Hàng Mô Phỏng */}
                     <div className="balance-card">
-                        <div className="card-top-info">
-                            <p className="card-label">SỐ TÀI KHOẢN (VÍ)</p>
-                           <p className="card-number" style={{ fontSize: '15px', wordBreak: 'break-all' }}>
-                                {walletAddress !== "Chưa kết nối" && walletAddress !== "Đang tải..." 
-                                    ? walletAddress 
-                                    : "----"}
-                            </p>
+                        <div className="card-top-row">
+                            {/* Đã sửa đổi nhãn ở đây */}
+                            <span className="card-type">SỐ TÀI KHOẢN</span>
+                            <Wifi size={24} className="wifi-icon" />
                         </div>
                         
-                        <div className="card-bottom-info">
+                        <div className="card-chip-row">
+                            <div className="chip-icon">
+                                <Cpu size={32} />
+                            </div>
+                        </div>
+
+                       <div className="card-number-row">
+                            <p className="card-number">
+                                {walletAddress !== "Chưa kết nối" ? `${walletAddress.substring(0,6)} •••• •••• ${walletAddress.substring(walletAddress.length - 4)}` : "**** **** **** ****"}
+                            </p>
+                            
+                            {walletAddress !== "Chưa kết nối" && (
+                                <button 
+                                    className="copy-btn" 
+                                    onClick={handleCopyAddress} 
+                                    title="Sao chép địa chỉ ví"
+                                >
+                                    {isCopied ? <Check size={20} color="#10B981" /> : <Copy size={20} />}
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="card-bottom-row">
                             <div>
                                 <p className="card-label">SỐ DƯ HIỆN TẠI</p>
-                                {/* Khu vực hiển thị số dư */}
                                 <div className="balance-display">
                                     <h2 className="balance-amount">
-                                        {/* Đổi chữ ETH thành SepoliaETH ở cả hai trạng thái hiện/ẩn */}
                                         {showBalance ? `${walletBalance} SepoliaETH` : '****** SepoliaETH'}
                                     </h2>
                                     <button className="eye-btn" onClick={() => setShowBalance(!showBalance)}>
@@ -189,50 +219,51 @@ const Dashboard = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="wallet-icon-wrapper">
-                                <CreditCard size={32} />
+                            <div className="mastercard-logo">
+                                <div className="circle red-circle"></div>
+                                <div className="circle orange-circle"></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Nút hành động (Action Buttons) */}
-                    <div className="action-buttons-grid">
-                        {/* Note: Điều hướng sang trang Transfer.jsx */}
+                    {/* Thanh Nút Hành Động */}
+                    <div className="action-bar">
                         <button className="action-btn active" onClick={() => navigate('/transfer')}>
-                            <Send size={20} />
+                            <div className="action-icon-wrapper"><ArrowUpRight size={18} /></div>
                             <span>Chuyển tiền</span>
                         </button>
                         
-                        <button className="action-btn" onClick={handleDeposit}>
-                            <PlusCircle size={20} />
+                        <button className="action-btn" onClick={() => alert("Chức năng nạp tiền đang phát triển")}>
+                            <div className="action-icon-wrapper"><ArrowDownLeft size={18} /></div>
                             <span>Nạp tiền</span>
                         </button>
                         
-                        {/* Note: Điều hướng sang trang BillPay.jsx */}
                         <button className="action-btn" onClick={() => navigate('/bill-pay')}>
-                            <CreditCard size={20} />
+                            <div className="action-icon-wrapper"><FileText size={18} /></div>
                             <span>Thanh toán</span>
                         </button>
                     </div>
 
-                    {/* Thống kê thu chi (Stats) */}
+                    {/* Thống kê thu chi - Áp dụng dữ liệu thật */}
                     <div className="stats-row">
                         <div className="stat-box">
-                            <p className="stat-label">Tổng thu nhập tháng này</p>
-                            <div className="stat-value-row">
-                                <h3 className="stat-amount">$5,240.00</h3>
-                                <span className="stat-badge positive">
-                                    <TrendingUp size={14} /> +12%
-                                </span>
+                            <div className="stat-icon-wrapper green-bg">
+                                <TrendingUp size={20} className="text-green" />
+                            </div>
+                            <div className="stat-info">
+                                <p className="stat-label">Thu nhập tháng này</p>
+                                {/* Hiển thị thu nhập với 4 số thập phân */}
+                                <h3 className="stat-amount text-green">+{monthlyIncome.toFixed(4)} ETH</h3> 
                             </div>
                         </div>
                         <div className="stat-box">
-                            <p className="stat-label">Tổng chi tiêu tháng này</p>
-                            <div className="stat-value-row">
-                                <h3 className="stat-amount">$3,120.00</h3>
-                                <span className="stat-badge negative">
-                                    <TrendingDown size={14} /> -5%
-                                </span>
+                            <div className="stat-icon-wrapper red-bg">
+                                <TrendingDown size={20} className="text-red" />
+                            </div>
+                            <div className="stat-info">
+                                <p className="stat-label">Chi tiêu tháng này</p>
+                                {/* Hiển thị chi tiêu với 4 số thập phân */}
+                                <h3 className="stat-amount text-red">-{monthlyExpense.toFixed(4)} ETH</h3>
                             </div>
                         </div>
                     </div>
@@ -250,30 +281,49 @@ const Dashboard = () => {
                         </div>
                         
                         <div className="tx-list">
-                            {transactions.map((tx) => (
-                                <div className="tx-item" key={tx.id}>
-                                    <div className={`tx-icon ${tx.icon === 'work' ? 'bg-green-light' : 'bg-blue-light'}`}>
-                                        {renderTxIcon(tx.icon)}
-                                    </div>
-                                    <div className="tx-info">
-                                        <p className="tx-title">{tx.title}</p>
-                                        <p className="tx-time">{tx.time}</p>
-                                    </div>
-                                    <div className={`tx-amount ${tx.type === 'income' ? 'text-green' : 'text-dark'}`}>
-                                        {tx.type === 'income' ? '+' : ''}{tx.type !== 'income' && tx.amount > 0 ? '-' : ''}{tx.amount.toFixed(2)}
-                                    </div>
-                                </div>
-                            ))}
+                            {isLoadingTx ? (
+                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>Đang tải dữ liệu...</p>
+                            ) : transactions.length > 0 ? (
+                                transactions.map((tx) => {
+                                    const isIncoming = tx.receiverAccount?.toLowerCase() === walletAddress.toLowerCase();
+                                    
+                                    const dateObj = new Date(tx.timestamp);
+                                    const timeString = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+                                    const dateString = dateObj.toLocaleDateString('vi-VN');
+                                    
+                                    const txTitle = tx.description || (isIncoming ? 'Nhận SepoliaETH' : 'Chuyển SepoliaETH');
+
+                                    return (
+                                        <div className="tx-item" key={tx.transactionId}>
+                                            <div className={`tx-icon ${isIncoming ? 'bg-green-light' : 'bg-red-light'}`}>
+                                                {isIncoming ? (
+                                                    <ArrowDownLeft size={18} className="text-green" />
+                                                ) : (
+                                                    <ArrowUpRight size={18} className="text-red" />
+                                                )}
+                                            </div>
+                                            <div className="tx-info">
+                                                <p className="tx-title">{txTitle}</p>
+                                                <p className="tx-time">{dateString}, {timeString}</p>
+                                            </div>
+                                            <div className={`tx-amount ${isIncoming ? 'text-green' : 'text-dark'}`}>
+                                                {isIncoming ? '+' : '-'}{Number(tx.amount).toFixed(4)} ETH
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>Chưa có giao dịch nào.</p>
+                            )}
                         </div>
                     </div>
 
                     {/* Banner Premium */}
                     <div className="premium-banner">
-                        <div className="premium-content">
-                            <h3>⭐ Nâng cấp Premium</h3>
-                            <p>Hạn mức cao hơn & phí thấp hơn</p>
-                            <button className="premium-btn">Tìm hiểu thêm</button>
-                        </div>
+                        <div className="premium-badge">PREMIUM</div>
+                        <h3>Nâng cấp tài khoản</h3>
+                        <p>Tận hưởng hạn mức chuyển tiền lên đến 2 tỷ/ngày và miễn phí mọi giao dịch.</p>
+                        <button className="premium-btn">Tìm hiểu thêm</button>
                     </div>
 
                 </div>

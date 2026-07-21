@@ -18,7 +18,7 @@ const Settings = () => {
 
         const newValue = !currentValue;
         try {
-            const response = await fetch(`http://localhost:8080/api/users/${user.username}/settings`, {
+            const response = await fetch(`http://10.10.46.81:8080/api/users/${user.username}/settings`, { 
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

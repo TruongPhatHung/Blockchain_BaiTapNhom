@@ -1,9 +1,8 @@
-/* Màu sắc chủ đạo từ thiết kế Lumina Bank */
 :root {
-    --brand-blue: #1E56D0;
-    --brand-dark: #112A61;
+    --brand-blue: #3164F4; /* Xanh dương giống ảnh */
+    --brand-dark: #1E293B; /* Xám đen tối */
     --bg-light: #F8FAFC;
-    --text-primary: #1E293B;
+    --text-primary: #0F172A;
     --text-secondary: #64748B;
     --border-color: #E2E8F0;
     --green-positive: #10B981;
@@ -13,7 +12,7 @@
 }
 
 .dashboard-container {
-    padding: 20px;
+    padding: 24px;
     font-family: 'Inter', sans-serif;
     animation: fadeIn 0.4s ease-in-out;
 }
@@ -22,147 +21,236 @@
 .dashboard-header {
     margin-bottom: 24px;
 }
-
-.welcome-text {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 6px 0;
+.flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.date-badge {
+    background: white;
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
 }
 
+.welcome-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+}
 .subtitle {
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0;
 }
 
+/* Nút kết nối */
+.connect-wallet-btn {
+    background-color: var(--text-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
 /* --- Layout Lưới --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1.6fr 1fr; /* Tỉ lệ giống hình ảnh */
+    grid-template-columns: 1.6fr 1fr;
     gap: 24px;
 }
 
 .main-column, .side-column {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
-/* --- Thẻ xanh (Balance Card) --- */
+/* --- Thẻ xanh (Card Design Giống Hình) --- */
 .balance-card {
-    background-color: var(--brand-blue);
+    background: linear-gradient(135deg, #1D5AE8, #3A7DF8);
     border-radius: 16px;
-    padding: 32px;
+    padding: 24px 32px;
     color: white;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 200px;
-    box-shadow: 0 10px 25px rgba(30, 86, 208, 0.2);
+    min-height: 240px;
+    box-shadow: 0 10px 25px rgba(29, 90, 232, 0.2);
+    position: relative;
+    overflow: hidden;
 }
 
-.card-top-info, .card-bottom-info {
+/* Hiệu ứng vòng tròn mờ trên thẻ */
+.balance-card::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -20px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.card-top-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.card-bottom-info {
-    flex-direction: row;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
-.card-label {
+.card-type {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.8);
+}
+.wifi-icon { color: rgba(255,255,255,0.8); }
+
+.card-chip-row { margin-bottom: 16px; }
+.chip-icon {
+    width: 40px;
+    height: 30px;
+    background: #FFD700;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b8860b;
+}
+
+.card-number-row { 
+    margin-bottom: auto; 
+    display: flex; /* Chuyển thành flexbox để xếp ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    gap: 12px; /* Khoảng cách giữa số thẻ và nút copy */
 }
 
 .card-number {
-    font-size: 18px;
-    font-family: monospace;
-    letter-spacing: 2px;
-    margin: 0;
-    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 16px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
 
+/* CSS cho nút Copy */
+.copy-btn {
+    background: rgba(255, 255, 255, 0.15); /* Nền trong suốt mờ */
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.3); /* Sáng lên khi di chuột vào */
+}
+
+.copy-btn:active {
+    transform: scale(0.95); /* Hiệu ứng lún xuống khi click */
+}
+.card-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.card-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 4px 0;
+}
 .balance-display {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
 .balance-amount {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
     margin: 0;
 }
-
 .eye-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
+    background: none; border: none; color: white; cursor: pointer; opacity: 0.8;
+}
+
+/* Logo Mastercard giả lập */
+.mastercard-logo {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
 }
 
-.eye-btn:hover {
-    color: white;
+.circle { 
+    width: 30px; 
+    height: 30px; 
+    border-radius: 50%; 
+    opacity: 0.9; /* Thêm độ trong suốt nhẹ để tạo hiệu ứng 2 hình đè lên nhau */
 }
 
-.wallet-icon-wrapper {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 12px;
+.red-circle { 
+    background-color: #EB001B; 
+    margin-right: -10px; 
+    z-index: 1; /* Tùy chọn: Giúp hình đỏ luôn nằm đúng lớp */
+}
+
+.orange-circle { 
+    background-color: #F79E1B; 
+    z-index: 2; /* Tùy chọn: Giúp hình cam nổi lên trên một chút */
+}
+
+/* --- Thanh Công Cụ (Action Bar) --- */
+.action-bar {
+    background: white;
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     display: flex;
-}
-
-/* --- Action Buttons (Chuyển tiền, Nạp, Thanh toán) --- */
-.action-buttons-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    padding: 8px;
+    gap: 8px;
 }
 
 .action-btn {
+    flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 20px;
-    background-color: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    color: var(--brand-blue);
-    font-weight: 600;
+    gap: 8px;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
-.action-btn:hover {
-    border-color: var(--brand-blue);
-    transform: translateY(-2px);
-}
+.action-btn:hover { background-color: var(--bg-light); }
 
 .action-btn.active {
-    background-color: var(--brand-dark);
+    background-color: var(--brand-blue);
     color: white;
-    border-color: var(--brand-dark);
+}
+.action-icon-wrapper {
+    display: flex; align-items: center; justify-content: center;
 }
 
-.action-btn span {
-    color: inherit;
-}
-
-/* --- Thống kê (Stats Box) --- */
+/* --- Thống kê thu chi --- */
 .stats-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -173,50 +261,24 @@
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.stat-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.stat-value-row {
+    padding: 16px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 16px;
 }
 
-.stat-amount {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
+.stat-icon-wrapper {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
 }
+.green-bg { background-color: var(--green-bg); }
+.red-bg { background-color: var(--red-bg); }
+.text-green { color: var(--green-positive); }
+.text-red { color: var(--red-negative); }
 
-.stat-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 20px;
-}
-
-.stat-badge.positive {
-    background-color: var(--green-bg);
-    color: var(--green-positive);
-}
-
-.stat-badge.negative {
-    background-color: var(--red-bg);
-    color: var(--red-negative);
-}
+.stat-info { display: flex; flex-direction: column; gap: 4px; }
+.stat-label { font-size: 13px; color: var(--text-secondary); margin: 0; }
+.stat-amount { font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary); }
 
 /* --- Lịch sử giao dịch (Sidebar) --- */
 .recent-tx-container {
@@ -227,80 +289,26 @@
 }
 
 .tx-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
 }
+.tx-header h3 { margin: 0; font-size: 16px; color: var(--text-primary); font-weight: 700; }
+.view-all { font-size: 13px; color: var(--brand-blue); cursor: pointer; font-weight: 500; }
 
-.tx-header h3 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-.view-all {
-    font-size: 13px;
-    color: var(--brand-blue);
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.view-all:hover {
-    text-decoration: underline;
-}
-
-.tx-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.tx-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
+.tx-list { display: flex; flex-direction: column; gap: 20px; }
+.tx-item { display: flex; align-items: center; gap: 16px; }
 
 .tx-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
 }
-
-.bg-blue-light { background-color: #E0E7FF; }
 .bg-green-light { background-color: var(--green-bg); }
+.bg-red-light { background-color: var(--red-bg); }
 
-.tx-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+.tx-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.tx-title { margin: 0; font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.tx-time { margin: 0; font-size: 12px; color: var(--text-secondary); }
 
-.tx-title {
-    margin: 0;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-}
-
-.tx-time {
-    margin: 0;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
-.tx-amount {
-    font-weight: 700;
-    font-size: 14px;
-}
-
-.text-green { color: var(--green-positive); }
+.tx-amount { font-weight: 700; font-size: 14px; }
 .text-dark { color: var(--text-primary); }
 
 /* --- Banner Premium --- */
@@ -309,74 +317,39 @@
     border-radius: 16px;
     padding: 24px;
     color: white;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
 }
 
-.premium-content h3 {
-    margin: 0 0 8px 0;
-    font-size: 16px;
+.premium-badge {
+    background-color: #FBBF24; /* Vàng nghệ */
+    color: #78350F;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
 }
 
-.premium-content p {
-    margin: 0 0 20px 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8);
-}
+.premium-banner h3 { margin: 0; font-size: 18px; font-weight: 600;}
+.premium-banner p { margin: 0 0 8px 0; font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; }
 
 .premium-btn {
     background-color: white;
-    color: var(--brand-dark);
+    color: var(--text-primary);
     border: none;
-    padding: 10px 24px;
+    padding: 12px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     width: 100%;
-    transition: background 0.2s;
 }
-
-.premium-btn:hover {
-    background-color: #f1f5f9;
-}
+.premium-btn:hover { background-color: var(--bg-light); }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
-}
-/* --- Cập nhật cho Header và Nút MetaMask --- */
-.flex-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; /* Tránh vỡ layout trên màn hình nhỏ */
-    gap: 16px;
-}
-
-.connect-wallet-btn {
-    background-color: #F6851B; /* Màu cam đặc trưng của MetaMask */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 6px rgba(246, 133, 27, 0.2);
-}
-
-.connect-wallet-btn:hover:not(:disabled) {
-    background-color: #e27618;
-    transform: translateY(-2px);
-}
-
-.connect-wallet-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-    color: #666;
-}
+} 

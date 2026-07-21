@@ -2,7 +2,9 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://localhost:8080/api"
+
+    baseURL: 'http://10.10.46.81:8080/api', // Chỉnh lại cho khớp với port Spring Boot của bạn
+
 });
 
 api.interceptors.request.use((config) => {

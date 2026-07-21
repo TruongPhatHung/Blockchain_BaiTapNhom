@@ -1,11 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="41f0b539-fcc4-4379-8c20-4686e982332d" name="Changes" comment="" />
+    <list default="true" id="41f0b539-fcc4-4379-8c20-4686e982332d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Dashboard.css" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Dashboard.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Dashboard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/EditProfile.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/EditProfile.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Settings.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Settings.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Transfer.css" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Transfer.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Transfer.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/pages/User/Transfer.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/services/api.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/frontend-banking/src/services/api.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BlockChain_Backed/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/BlockChain_Backed/src/main/resources/application.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0" />
+      <entry key="S60" value="1.0" />
+      <entry key="M2" value="1.0" />
+      <entry key="M5" value="1.0" />
+      <entry key="M10" value="1.0" />
+      <entry key="M15" value="1.0" />
+      <entry key="M30" value="1.0" />
+      <entry key="H1" value="1.0" />
+      <entry key="H2" value="1.0" />
+      <entry key="H4" value="1.0" />
+      <entry key="D1" value="1.0" />
+      <entry key="W1" value="1.0" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.09214182608069382" />
+      <entry key="MS500" value="0.6207137457630562" />
+      <entry key="S2" value="0.8876113372694978" />
+      <entry key="S5" value="0.9534307096886652" />
+      <entry key="S10" value="0.976437765394531" />
+      <entry key="S30" value="0.9920834148615084" />
+      <entry key="S60" value="0.9960338422270141" />
+      <entry key="M2" value="0.9980149509035494" />
+      <entry key="M5" value="0.9992055070097797" />
+      <entry key="M10" value="0.9996026745711417" />
+      <entry key="M15" value="0.99973509883683" />
+      <entry key="M30" value="0.9998675406456747" />
+      <entry key="H1" value="0.999933768129507" />
+      <entry key="H2" value="0.9999668835164027" />
+      <entry key="H4" value="0.9999834416211114" />
+      <entry key="D1" value="0.9999972402511448" />
+      <entry key="W1" value="0.9999996057496973" />
+    </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0,
@@ -16,16 +103,56 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/Do_An/Bai_GK_BlockChain/Blockchain_BaiTapNhom",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.BlockChainBackedApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Blockchain-BaiTapNhom&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
+  <component name="RunManager">
+    <configuration name="BlockChainBackedApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="BlockChain_Backed" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.ctut.wms.blockchain_backed.BlockChainBackedApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.26222.65" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.26222.65" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="41f0b539-fcc4-4379-8c20-4686e982332d" name="Changes" comment="" />
@@ -33,7 +160,22 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784105895383</updated>
+      <workItem from="1784191531151" duration="155000" />
+      <workItem from="1784191716141" duration="2271000" />
+      <workItem from="1784250404516" duration="88000" />
+      <workItem from="1784255522847" duration="9000" />
+      <workItem from="1784259401986" duration="59000" />
+      <workItem from="1784271646569" duration="4641000" />
+      <workItem from="1784525921011" duration="129000" />
+      <workItem from="1784536712604" duration="2000" />
+      <workItem from="1784550009044" duration="680000" />
+      <workItem from="1784614635040" duration="144000" />
+      <workItem from="1784625077604" duration="420000" />
+      <workItem from="1784632597075" duration="27000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

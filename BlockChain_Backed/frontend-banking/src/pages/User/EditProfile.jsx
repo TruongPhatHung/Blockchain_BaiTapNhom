@@ -14,17 +14,34 @@ const EditProfile = () => {
     const avatarLetter = (formData.fullName || user?.username || 'U').charAt(0).toUpperCase();
     const handleChange = (event) => setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
 
-    const handleAvatarChange = (event) => {
-        const image = event.target.files?.[0];
-        if (!image) return;
-        if (!image.type.startsWith('image/')) return setMessage('Vui lòng chọn một tệp ảnh.');
-        if (image.size > 1_500_000) return setMessage('Ảnh phải nhỏ hơn 1.5 MB.');
-        const reader = new FileReader();
-        reader.onload = () => setFormData((current) => ({ ...current, avatarUrl: reader.result }));
-        reader.readAsDataURL(image);
-        setMessage('');
-    };
+    const handleAvatarChange = async (event) => {
+    const image = event.target.files?.[0];
+    if (!image) return;
+    if (!image.type.startsWith('image/')) return setMessage('Vui lòng chọn một tệp ảnh.');
+    if (image.size > 1_500_000) return setMessage('Ảnh phải nhỏ hơn 1.5 MB.');
 
+    setMessage('Đang tải ảnh lên...');
+    
+    // Tạo form data chứa file ảnh thực tế
+    const uploadData = new FormData();
+    uploadData.append('file', image);
+
+    try {
+        // Gọi API upload file của Backend (ví dụ)
+        const uploadResponse = await api.post('/upload', uploadData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        // Backend trả về URL ngắn (VD: https://my-server.com/images/avatar.jpg)
+        const shortImageUrl = uploadResponse.data.url; 
+        
+        // Lưu URL ngắn này vào State
+        setFormData((current) => ({ ...current, avatarUrl: shortImageUrl }));
+        setMessage('Tải ảnh lên thành công! Nhấn Lưu thay đổi.');
+    } catch (error) {
+        setMessage('Lỗi khi tải ảnh lên máy chủ.');
+    }
+};
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (!user?.username) return setMessage('Không xác định được tài khoản.');
