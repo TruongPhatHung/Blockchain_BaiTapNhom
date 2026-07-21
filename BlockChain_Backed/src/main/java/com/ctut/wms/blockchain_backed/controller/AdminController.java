@@ -28,7 +28,7 @@ public class AdminController {
             return ResponseEntity.status(400).body("CẢNH BÁO: Phát hiện dữ liệu sổ cái đã bị thay đổi trái phép!");
         }
     }
-    // ... Các code cũ trong AdminController.java
+
 
     @Autowired
     private com.ctut.wms.blockchain_backed.repository.AuditLogRepository auditLogRepository;
@@ -75,6 +75,23 @@ public class AdminController {
             return ResponseEntity.ok("Đã ghi đè dữ liệu giả mạo thành công!");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Lỗi khi giả mạo dữ liệu: " + e.getMessage());
+        }
+    }
+    @GetMapping("/verify-blockchain")
+    public ResponseEntity<?> verifySystem() {
+        // Đổi sang gọi hàm lấy danh sách ID bị lỗi (Bạn sẽ tạo hàm này ở Bước 2)
+        List<Long> tamperedIds = transactionService.getTamperedTransactionIds();
+
+        if (tamperedIds.isEmpty()) {
+            // Không có ID nào bị lỗi -> Xanh tươi
+            return ResponseEntity.ok("Hệ thống an toàn. Dữ liệu toàn vẹn chỉnh chu.");
+        } else {
+            // Có lỗi -> Đóng gói câu thông báo + Danh sách ID vào JSON gửi về ReactJS
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "CẢNH BÁO: Phát hiện dữ liệu sổ cái đã bị thay đổi trái phép!");
+            errorResponse.put("tamperedIds", tamperedIds);
+
+            return ResponseEntity.status(400).body(errorResponse);
         }
     }
 }

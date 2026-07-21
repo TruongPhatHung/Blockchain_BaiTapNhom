@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // 🟢 Bỏ qua cảnh báo "unused" cho chữ React và các biến viết hoa
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^React$' }],
+    },
   },
 ])

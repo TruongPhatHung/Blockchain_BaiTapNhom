@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -301,5 +302,28 @@ public class TransactionService {
         }
 
         transactionRepository.save(tx);
+    }
+    // Hàm mới: Trả về danh sách ID của các giao dịch bị sửa lén
+    public List<Long> getTamperedTransactionIds() {
+        List<Long> tamperedIds = new ArrayList<>();
+        List<Transaction> allTransactions = transactionRepository.findAll();
+
+        for (Transaction tx : allTransactions) {
+            // Tính toán lại Hash dựa trên dữ liệu hiện tại trong DB
+            String dataToHash = tx.getSenderAccount() +
+                    tx.getReceiverAccount() +
+                    tx.getAmount() +
+                    tx.getDescription() +
+                    tx.getPreviousHash(); // Thêm các trường bạn dùng để băm
+
+            String calculatedHash = BlockchainUtil.calculateHash(dataToHash); // Dùng class Hash của bạn
+
+            // Nếu Hash tính lại KHÔNG KHỚP với Hash lưu trong DB -> Ghi sổ đen!
+            if (!calculatedHash.equals(tx.getBlockHash())) {
+                tamperedIds.add(tx.getTransactionId());
+            }
+        }
+
+        return tamperedIds;
     }
 }

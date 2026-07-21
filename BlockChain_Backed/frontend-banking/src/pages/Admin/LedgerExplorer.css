@@ -254,4 +254,117 @@
 .btn-submit:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}/* Card bị gian lận (Tô đỏ viền và nền nhạt) */
+.block-card-tampered {
+    border: 2px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+}
+
+.tamper-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-tampered-warning {
+    background-color: #fee2e2;
+    color: #dc2626;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-inspect-diff {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s;
+}
+
+.btn-inspect-diff:hover {
+    background-color: #b91c1c;
+}
+
+.text-amount-danger {
+    color: #dc2626;
+    font-weight: bold;
+    text-decoration: line-through;
+}
+
+.hash-mismatch {
+    color: #dc2626 !important;
+    font-weight: bold;
+}
+
+/* MODAL TRUY TỐ */
+.modal-inspect {
+    max-width: 650px !important;
+    width: 90%;
+}
+
+.modal-title-danger {
+    color: #dc2626;
+    margin: 0;
+    font-size: 18px;
+}
+
+.inspect-desc {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 16px;
+}
+
+.diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.diff-table th, .diff-table td {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+    font-size: 13px;
+}
+
+.diff-table th {
+    background-color: #f9fafb;
+    color: #374151;
+}
+
+.diff-val-db {
+    background-color: #fee2e2;
+    color: #991b1b;
+    font-weight: bold;
+}
+
+.diff-val-chain {
+    background-color: #dcfce7;
+    color: #166534;
+    font-weight: bold;
+}
+
+.diff-hash-err {
+    font-family: monospace;
+    color: #dc2626;
+    font-size: 11px;
+}
+
+.diff-hash-ok {
+    font-family: monospace;
+    color: #16a34a;
+    font-size: 11px;
 }
