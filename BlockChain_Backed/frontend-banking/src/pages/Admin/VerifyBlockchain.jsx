@@ -1,26 +1,23 @@
-// src/pages/Admin/VerifyBlockchain.jsx
-import React, { useState } from 'react';
-import adminService from '../../services/admin.service';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import './VerifyBlockchain.css';
 
 const VerifyBlockchain = () => {
-    const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState(null); // null, 'VALID', 'INVALID'
+    const [auditList, setAuditList] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleVerify = async () => {
-        setLoading(true);
-        setResult(null);
-        
+    useEffect(() => {
+        fetchVerificationData();
+    }, []);
+
+    const fetchVerificationData = async () => {
         try {
-            // Giả lập delay 1.5s để tạo hiệu ứng đang quét hệ thống
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-            
-            const isValid = await adminService.verifyBlockchain();
-            setResult(isValid ? 'VALID' : 'INVALID');
+            setLoading(true);
+            // Gọi API kiểm tra và so sánh DB với Blockchain
+            const response = await api.get('/admin/verify-blockchain');
+            setAuditList(response.data);
         } catch (error) {
-            console.error("Lỗi khi verify:", error);
-            // Giả lập kết quả (Thường Blockchain sẽ hợp lệ)
-            setResult('VALID');
+            console.error("Lỗi đối soát dữ liệu:", error);
         } finally {
             setLoading(false);
         }
@@ -28,29 +25,83 @@ const VerifyBlockchain = () => {
 
     return (
         <div className="verify-container">
-            <h2 className="verify-title">Kiểm Tra Tính Toàn Vẹn Hệ Thống</h2>
-            <p className="verify-desc">
-                Hệ thống sẽ quét lại toàn bộ Sổ cái (Ledger), tính toán lại mã Hash của từng khối 
-                từ Genesis Block đến khối hiện tại để đảm bảo không có bất kỳ giao dịch nào bị chỉnh sửa trái phép.
-            </p>
+            <div className="verify-header">
+                <h2>🛡️ Kiểm Thử & Truy Tố Dữ Liệu Blockchain</h2>
+                <button className="btn-refresh" onClick={fetchVerificationData}>
+                    🔄 Tải lại & Đối soát
+                </button>
+            </div>
 
-            <button 
-                className="btn-verify" 
-                onClick={handleVerify}
-                disabled={loading}
-            >
-                {loading ? 'Đang quét hệ thống...' : 'Bắt Đầu Kiểm Tra'}
-            </button>
+            {loading ? (
+                <div className="loading">Đang đối soát dữ liệu với Ledger...</div>
+            ) : (
+                <div className="audit-table-wrapper">
+                    <table className="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Block #</th>
+                                <th>Mã Giao Dịch</th>
+                                <th>Trạng Thái</th>
+                                <th>Dữ Liệu Trong Database (Hiện tại)</th>
+                                <th>Dữ Liệu Gốc Blockchain (Ledger)</th>
+                                <th>Hành Động Truy Tố</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {auditList.map((item, index) => {
+                                const isTampered = item.isTampered; // Boolean từ backend trả về
 
-            {result === 'VALID' && (
-                <div className="verify-result result-valid">
-                    ✅ HỢP LỆ! Blockchain an toàn và không bị can thiệp.
-                </div>
-            )}
+                                return (
+                                    <tr key={index} className={isTampered ? "row-tampered" : "row-valid"}>
+                                        <td><strong>#{item.blockIndex}</strong></td>
+                                        <td><code>{item.transactionId}</code></td>
 
-            {result === 'INVALID' && (
-                <div className="verify-result result-invalid">
-                    ❌ CẢNH BÁO! Phát hiện sự thay đổi dữ liệu trái phép trong hệ thống.
+                                        {/* Cột trạng thái */}
+                                        <td>
+                                            {isTampered ? (
+                                                <span className="badge badge-danger">🚨 BỊ CHỈNH SỬA</span>
+                                            ) : (
+                                                <span className="badge badge-success">✅ HỢP LỆ</span>
+                                            )}
+                                        </td>
+
+                                        {/* Dữ liệu Database hiện tại */}
+                                        <td className="data-cell">
+                                            <div><strong>Tài khoản:</strong> {item.dbData?.accountNumber}</div>
+                                            <div className={isTampered && item.dbData?.amount !== item.blockchainData?.amount ? "highlight-diff" : ""}>
+                                                <strong>Số tiền:</strong> {item.dbData?.amount?.toLocaleString()} VNĐ
+                                            </div>
+                                            <div><strong>Nội dung:</strong> {item.dbData?.description}</div>
+                                        </td>
+
+                                        {/* Dữ liệu Gốc Blockchain */}
+                                        <td className="data-cell">
+                                            <div><strong>Tài khoản:</strong> {item.blockchainData?.accountNumber}</div>
+                                            <div>
+                                                <strong>Số tiền gốc:</strong> {item.blockchainData?.amount?.toLocaleString()} VNĐ
+                                            </div>
+                                            <div><strong>Nội dung:</strong> {item.blockchainData?.description}</div>
+                                        </td>
+
+                                        {/* Cột Chi tiết Hash & Truy tố */}
+                                        <td className="action-cell">
+                                            <div className="hash-box">
+                                                <small><strong>Current Hash (DB):</strong></small>
+                                                <div className="hash-text">{item.currentHash}</div>
+                                                <small><strong>Original Hash (Chain):</strong></small>
+                                                <div className="hash-text">{item.previousHash}</div>
+                                            </div>
+                                            {isTampered && (
+                                                <div className="alert-box">
+                                                    ⚠️ Phát hiện sai lệch giá trị! Dữ liệu DB đã bị can thiệp trái phép.
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>
