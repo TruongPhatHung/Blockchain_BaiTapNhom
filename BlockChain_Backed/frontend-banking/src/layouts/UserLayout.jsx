@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../store/AuthContext';
+import { useLanguage } from '../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
 import './UserLayout.css'; 
 
 const UserLayout = () => {
     const { user, logout } = useContext(AuthContext);
+    const { t } = useLanguage(); // SỬ DỤNG HÀM DỊCH t()
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -37,7 +39,7 @@ const UserLayout = () => {
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
                             </svg>
-                            <span>Trang Chủ</span>
+                            <span>{t('menuHome')}</span>
                         </NavLink>
                     </li>
                     <li>
@@ -48,7 +50,7 @@ const UserLayout = () => {
                                 <line x1="20" y1="8" x2="20" y2="14"></line>
                                 <line x1="23" y1="11" x2="17" y2="11"></line>
                             </svg>
-                            <span>Chuyển Tiền</span>
+                            <span>{t('menuTransfer')}</span>
                         </NavLink>
                     </li>
                     <li>
@@ -57,7 +59,7 @@ const UserLayout = () => {
                                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
-                            <span>Thanh Toán</span>
+                            <span>{t('menuPayment')}</span>
                         </NavLink>
                     </li>
                     <li>
@@ -65,7 +67,7 @@ const UserLayout = () => {
                             <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                             </svg>
-                            <span>Lịch Sử Giao Dịch</span>
+                            <span>{t('menuHistory')}</span>
                         </NavLink>
                     </li>
                     <li>
@@ -74,7 +76,7 @@ const UserLayout = () => {
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                             </svg>
-                            <span>Cài đặt</span>
+                            <span>{t('menuSettings')}</span>
                         </NavLink>
                     </li>
                 </ul>
@@ -87,7 +89,7 @@ const UserLayout = () => {
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
-                        <span>Đăng Xuất</span>
+                        <span>{t('logout')}</span>
                     </button>
                 </div>
             </aside>
@@ -101,12 +103,12 @@ const UserLayout = () => {
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <input type="text" placeholder="Tìm kiếm tính năng, giao dịch..." />
+                        <input type="text" placeholder={t('searchPlaceholder')} />
                     </div>
 
                     <div className="header-utilities">
                         {/* Biểu tượng chuông thông báo */}
-                        <button className="util-icon-btn" title="Thông báo">
+                        <button className="util-icon-btn" title={t('notifications')}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -116,10 +118,20 @@ const UserLayout = () => {
                         
                         {/* Profile người dùng */}
                         <div className="user-profile-wrapper">
-                            <div className="user-avatar-circle">{firstLetter}</div>
+                            {/* KIỂM TRA ĐIỀU KIỆN HIỂN THỊ AVATAR TRONG NAVBAR */}
+                            {user?.avatarUrl ? (
+                                <img 
+                                    src={user.avatarUrl} 
+                                    alt="Ảnh đại diện" 
+                                    className="user-avatar-image" 
+                                />
+                            ) : (
+                                <div className="user-avatar-circle">{firstLetter}</div>
+                            )}
+                            
                             <div className="user-info">
                                 <span className="username-text">{user?.username || 'hungsayhi'}</span>
-                                <span className="role-text">Thành viên Bạc</span>
+                                <span className="role-text">{t('memberTier')}</span>
                             </div>
                         </div>
                     </div>
@@ -130,15 +142,15 @@ const UserLayout = () => {
                     <Outlet />
                 </div>
 
-                {/* Footer Mới thêm vào theo thiết kế image_d4c188.png */}
+                {/* Footer Mới thêm vào theo thiết kế */}
                 <footer className="main-footer">
                     <div className="footer-copyright">
-                        © 2026 ABC Bank. All rights reserved.
+                        {t('footerRights')}
                     </div>
                     <div className="footer-links">
-                        <a href="#terms">Điều khoản sử dụng</a>
-                        <a href="#guide">Hướng dẫn sử dụng dịch vụ</a>
-                        <a href="#tx-guide">Hướng dẫn giao dịch</a>
+                        <a href="#terms">{t('terms')}</a>
+                        <a href="#guide">{t('guideService')}</a>
+                        <a href="#tx-guide">{t('guideTransaction')}</a>
                     </div>
                 </footer>
             </main>

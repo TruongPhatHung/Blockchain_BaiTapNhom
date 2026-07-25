@@ -23,8 +23,8 @@ import ManageUsers from '../pages/Admin/ManageUsers';
 import SupportTickets from '../pages/Admin/SupportTickets';
 import LedgerExplorer from '../pages/Admin/LedgerExplorer';
 import VerifyBlockchain from '../pages/Admin/VerifyBlockchain';
-import AuditLogs from '../pages/Admin/AuditLogs'; // Import thêm trang Nhật ký
-import DatabaseEditor from '../pages/Admin/DatabaseEditor'; // Import thêm trang Database Editor
+import AuditLogs from '../pages/Admin/AuditLogs'; 
+import DatabaseEditor from '../pages/Admin/DatabaseEditor'; 
 
 const AppRoutes = () => {
     return (
@@ -36,7 +36,11 @@ const AppRoutes = () => {
 
             {/* LUỒNG USER (Khách Hàng) */}
             <Route path="/" element={<PrivateRoute allowedRoles={['USER']}><UserLayout /></PrivateRoute>}>
-                {/* Sử dụng đường dẫn tương đối (không có dấu / ở đầu) */}
+                {/* ĐIỂM SỬA 1: Thêm Route index để xác định trang mặc định.
+                    Nếu người dùng vào đường dẫn "/", hệ thống sẽ hướng tới "dashboard".
+                    Nhưng nếu chưa đăng nhập, PrivateRoute sẽ lập tức chặn lại và đẩy về "/login". */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+                
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="transfer" element={<Transfer />} />
                 <Route path="transfer-confirm" element={<TransferConfirm />} />
@@ -49,7 +53,9 @@ const AppRoutes = () => {
 
             {/* LUỒNG ADMIN (Quản Trị Viên) */}
             <Route path="/admin" element={<PrivateRoute allowedRoles={['ADMIN']}><AdminLayout /></PrivateRoute>}>
-                {/* Đồng bộ chính xác 5 trang với thanh menu AdminLayout */}
+                {/* ĐIỂM SỬA 2: Thêm Route index tương tự cho Admin */}
+                <Route index element={<Navigate to="users" replace />} />
+                
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="tickets" element={<SupportTickets />} />
                 <Route path="ledger" element={<LedgerExplorer />} />

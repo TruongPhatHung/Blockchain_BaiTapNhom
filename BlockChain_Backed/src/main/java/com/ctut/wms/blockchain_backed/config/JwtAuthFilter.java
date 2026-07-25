@@ -1,6 +1,5 @@
 package com.ctut.wms.blockchain_backed.config;
 
-
 import com.ctut.wms.blockchain_backed.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -62,7 +61,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // Cho phép Request đi tiếp
+        // 4. Cho phép Request đi tiếp
         filterChain.doFilter(request, response);
     }
 }

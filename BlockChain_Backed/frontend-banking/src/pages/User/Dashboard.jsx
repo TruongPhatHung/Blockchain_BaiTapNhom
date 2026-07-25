@@ -6,6 +6,7 @@ import {
     TrendingUp, TrendingDown, Wifi, Cpu, Copy, Check
 } from 'lucide-react';
 import txService from '../../services/tx.service';
+import { useLanguage } from '../../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -15,7 +16,7 @@ const Dashboard = () => {
     // --- STATE QUẢN LÝ DỮ LIỆU ---
     const [showBalance, setShowBalance] = useState(true);
     const [walletAddress, setWalletAddress] = useState("Chưa kết nối");
-    const [walletBalance, setWalletBalance] = useState("0.000"); // Đổi mặc định thành 3 số 0
+    const [walletBalance, setWalletBalance] = useState("0.000");
     const [isConnecting, setIsConnecting] = useState(false);
     
     // State cho Lịch sử giao dịch thật & Thống kê
@@ -26,6 +27,9 @@ const Dashboard = () => {
 
     // State quản lý trạng thái nút copy
     const [isCopied, setIsCopied] = useState(false);
+
+    // LẤY HÀM DỊCH t() VÀ STATE language ĐỂ XỬ LÝ NGÀY THÁNG
+    const { t, language } = useLanguage(); 
 
     // Hàm xử lý sao chép địa chỉ ví
     const handleCopyAddress = () => {
@@ -40,8 +44,9 @@ const Dashboard = () => {
         }
     };
 
-    // Lấy ngày tháng hiện tại bằng tiếng Việt
-    const currentDate = new Intl.DateTimeFormat('vi-VN', { 
+    // Lấy ngày tháng hiện tại linh hoạt theo ngôn ngữ (vi-VN hoặc en-US)
+    const locale = language === 'en' ? 'en-US' : 'vi-VN';
+    const currentDate = new Intl.DateTimeFormat(locale, { 
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
     }).format(new Date());
 
@@ -53,7 +58,6 @@ const Dashboard = () => {
                 params: [account, 'latest']
             });
             const balanceInWei = BigInt(balanceHex);
-            // Cập nhật thành toFixed(3) để đồng bộ với ví MetaMask (ví dụ: 0.100)
             const balanceInEth = (Number(balanceInWei) / 1e18).toFixed(3);
             setWalletBalance(balanceInEth);
         } catch (error) {
@@ -69,7 +73,7 @@ const Dashboard = () => {
                     const account = accounts[0];
                     setWalletAddress(account);
                     fetchBalance(account); 
-                    fetchDashboardTransactions(account); // Lấy giao dịch & tính thống kê
+                    fetchDashboardTransactions(account);
                 } else {
                     setWalletAddress("Chưa kết nối");
                     setWalletBalance("0.000");
@@ -98,7 +102,7 @@ const Dashboard = () => {
                 setIsConnecting(false);
             }
         } else {
-            alert("Vui lòng cài đặt MetaMask!");
+            alert(t('installMetamask') || "Vui lòng cài đặt MetaMask!");
         }
     };
 
@@ -108,18 +112,15 @@ const Dashboard = () => {
         try {
             const historyData = await txService.getHistory(address);
             
-            // Lấy thời gian tháng hiện tại
             const currentMonth = new Date().getMonth();
             const currentYear = new Date().getFullYear();
             
             let income = 0;
             let expense = 0;
 
-            // Tính toán thu nhập và chi tiêu của tháng này
             historyData.forEach(tx => {
                 const txDate = new Date(tx.timestamp);
                 
-                // Chỉ tính các giao dịch trong tháng hiện tại và có trạng thái SUCCESS
                 if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear && tx.status === 'SUCCESS') {
                     const isIncoming = tx.receiverAccount?.toLowerCase() === address.toLowerCase();
                     if (isIncoming) {
@@ -133,7 +134,6 @@ const Dashboard = () => {
             setMonthlyIncome(income);
             setMonthlyExpense(expense);
             
-            // Chỉ lấy 5 giao dịch gần nhất để hiển thị
             const recentTxs = historyData.slice(0, 5);
             setTransactions(recentTxs);
         } catch (error) {
@@ -153,7 +153,7 @@ const Dashboard = () => {
             window.ethereum.on('accountsChanged', handleAccountsChanged)
             return () => window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
     }, []);
 
     return (
@@ -161,14 +161,16 @@ const Dashboard = () => {
             {/* Header */}
             <div className="dashboard-header flex-header">
                 <div>
-                    <h1 className="welcome-text">Chào mừng trở lại, {user?.fullName || user?.username }!</h1>
-                    <p className="subtitle">Cập nhật tổng quan tài chính của bạn hôm nay.</p>
+                    <h1 className="welcome-text">{t('welcomeBack')}, {user?.fullName || user?.username }!</h1>
+                    <p className="subtitle">{t('financialOverview')}</p>
                 </div>
                 
                 <div className="header-actions">
                     <div className="date-badge">{currentDate}</div>
                     <button className="connect-wallet-btn" onClick={connectWallet} disabled={isConnecting}>
-                        {isConnecting ? 'Đang xử lý...' : (walletAddress === "Chưa kết nối" ? '🦊 Kết nối Ví' : '🔄 Đồng bộ')}
+                        {isConnecting 
+                            ? (t('processing') || 'Đang xử lý...') 
+                            : (walletAddress === "Chưa kết nối" ? '🦊 ' + (t('connectWallet') || 'Kết nối Ví') : '🔄 ' + t('sync'))}
                     </button>
                 </div>
             </div>
@@ -180,8 +182,7 @@ const Dashboard = () => {
                     {/* Thẻ Ngân Hàng Mô Phỏng */}
                     <div className="balance-card">
                         <div className="card-top-row">
-                            {/* Đã sửa đổi nhãn ở đây */}
-                            <span className="card-type">SỐ TÀI KHOẢN</span>
+                            <span className="card-type">{t('accountNumber')}</span>
                             <Wifi size={24} className="wifi-icon" />
                         </div>
                         
@@ -200,7 +201,7 @@ const Dashboard = () => {
                                 <button 
                                     className="copy-btn" 
                                     onClick={handleCopyAddress} 
-                                    title="Sao chép địa chỉ ví"
+                                    title={t('copyAddress') || "Sao chép địa chỉ ví"}
                                 >
                                     {isCopied ? <Check size={20} color="#10B981" /> : <Copy size={20} />}
                                 </button>
@@ -209,7 +210,7 @@ const Dashboard = () => {
                         
                         <div className="card-bottom-row">
                             <div>
-                                <p className="card-label">SỐ DƯ HIỆN TẠI</p>
+                                <p className="card-label">{t('currentBalance')}</p>
                                 <div className="balance-display">
                                     <h2 className="balance-amount">
                                         {showBalance ? `${walletBalance} SepoliaETH` : '****** SepoliaETH'}
@@ -230,29 +231,28 @@ const Dashboard = () => {
                     <div className="action-bar">
                         <button className="action-btn active" onClick={() => navigate('/transfer')}>
                             <div className="action-icon-wrapper"><ArrowUpRight size={18} /></div>
-                            <span>Chuyển tiền</span>
+                            <span>{t('transferBtn')}</span>
                         </button>
                         
-                        <button className="action-btn" onClick={() => alert("Chức năng nạp tiền đang phát triển")}>
+                        <button className="action-btn" onClick={() => alert(t('featureDeveloping') || "Chức năng nạp tiền đang phát triển")}>
                             <div className="action-icon-wrapper"><ArrowDownLeft size={18} /></div>
-                            <span>Nạp tiền</span>
+                            <span>{t('depositBtn')}</span>
                         </button>
                         
                         <button className="action-btn" onClick={() => navigate('/bill-pay')}>
                             <div className="action-icon-wrapper"><FileText size={18} /></div>
-                            <span>Thanh toán</span>
+                            <span>{t('paymentBtn')}</span>
                         </button>
                     </div>
 
-                    {/* Thống kê thu chi - Áp dụng dữ liệu thật */}
+                    {/* Thống kê thu chi */}
                     <div className="stats-row">
                         <div className="stat-box">
                             <div className="stat-icon-wrapper green-bg">
                                 <TrendingUp size={20} className="text-green" />
                             </div>
                             <div className="stat-info">
-                                <p className="stat-label">Thu nhập tháng này</p>
-                                {/* Hiển thị thu nhập với 4 số thập phân */}
+                                <p className="stat-label">{t('incomeThisMonth')}</p>
                                 <h3 className="stat-amount text-green">+{monthlyIncome.toFixed(4)} ETH</h3> 
                             </div>
                         </div>
@@ -261,8 +261,7 @@ const Dashboard = () => {
                                 <TrendingDown size={20} className="text-red" />
                             </div>
                             <div className="stat-info">
-                                <p className="stat-label">Chi tiêu tháng này</p>
-                                {/* Hiển thị chi tiêu với 4 số thập phân */}
+                                <p className="stat-label">{t('expenseThisMonth')}</p>
                                 <h3 className="stat-amount text-red">-{monthlyExpense.toFixed(4)} ETH</h3>
                             </div>
                         </div>
@@ -276,22 +275,24 @@ const Dashboard = () => {
                     {/* Lịch sử giao dịch */}
                     <div className="recent-tx-container">
                         <div className="tx-header">
-                            <h3>Giao dịch gần đây</h3>
-                            <span className="view-all" onClick={() => navigate('/history')}>Xem tất cả</span>
+                            <h3>{t('recentTransactions')}</h3>
+                            <span className="view-all" onClick={() => navigate('/history')}>{t('viewAll')}</span>
                         </div>
                         
                         <div className="tx-list">
                             {isLoadingTx ? (
-                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>Đang tải dữ liệu...</p>
+                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>
+                                    {t('loadingData') || 'Đang tải dữ liệu...'}
+                                </p>
                             ) : transactions.length > 0 ? (
                                 transactions.map((tx) => {
                                     const isIncoming = tx.receiverAccount?.toLowerCase() === walletAddress.toLowerCase();
                                     
                                     const dateObj = new Date(tx.timestamp);
                                     const timeString = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
-                                    const dateString = dateObj.toLocaleDateString('vi-VN');
+                                    const dateString = dateObj.toLocaleDateString(locale); // Dùng locale đã lấy ở trên
                                     
-                                    const txTitle = tx.description || (isIncoming ? 'Nhận SepoliaETH' : 'Chuyển SepoliaETH');
+                                    const txTitle = tx.description || (isIncoming ? (t('receiveEth') || 'Nhận SepoliaETH') : (t('sendEth') || 'Chuyển SepoliaETH'));
 
                                     return (
                                         <div className="tx-item" key={tx.transactionId}>
@@ -313,7 +314,9 @@ const Dashboard = () => {
                                     );
                                 })
                             ) : (
-                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>Chưa có giao dịch nào.</p>
+                                <p style={{textAlign: 'center', color: '#64748b', fontSize: '14px', margin: '20px 0'}}>
+                                    {t('noTransactions')}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -321,9 +324,9 @@ const Dashboard = () => {
                     {/* Banner Premium */}
                     <div className="premium-banner">
                         <div className="premium-badge">PREMIUM</div>
-                        <h3>Nâng cấp tài khoản</h3>
-                        <p>Tận hưởng hạn mức chuyển tiền lên đến 2 tỷ/ngày và miễn phí mọi giao dịch.</p>
-                        <button className="premium-btn">Tìm hiểu thêm</button>
+                        <h3>{t('upgradeAccount')}</h3>
+                        <p>{t('upgradeDesc')}</p>
+                        <button className="premium-btn">{t('learnMore')}</button>
                     </div>
 
                 </div>

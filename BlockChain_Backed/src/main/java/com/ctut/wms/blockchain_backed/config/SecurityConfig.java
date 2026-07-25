@@ -13,97 +13,54 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Inject JWT filter để xử lý token trong mỗi request
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
-    // Mã hóa password bằng BCrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Cung cấp AuthenticationManager cho quá trình xác thực
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    // Cấu hình bảo mật chính
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Cấu hình CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Tắt CSRF (dùng JWT nên không cần)
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
-
-                // Không sử dụng session (stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Phân quyền API
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/api/auth/**", "/api/accounts/register").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Admin only
+                        // THÊM "/uploads/**" VÀO DÒNG NÀY ĐỂ CHO PHÉP HIỂN THỊ ẢNH
+                        .requestMatchers("/api/auth/**", "/api/accounts/register", "/api/transactions/**", "/uploads/**").permitAll()
+
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-
-                        // Staff & Admin
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
-
-                        // User settings
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/settings").permitAll()
 
-                        // Users (⚠ currently permitAll trước -> rule dưới sẽ không chạy)
-                        .requestMatchers("/api/users/**").permitAll()
+                        // API upload đã được bạn cấu hình đúng
+                        .requestMatchers("/api/upload/**", "/api/upload").permitAll()
+
                         .requestMatchers("/api/users/**").hasAnyAuthority("USER", "STAFF", "ADMIN")
-
-                        // Transactions (public)
-                        .requestMatchers("/api/transactions/**").permitAll()
-
-                        // Các API yêu cầu đăng nhập
                         .requestMatchers(
                                 "/api/user/**",
                                 "/api/statistics/**",
                                 "/api/notifications/**",
                                 "/api/beneficiaries/**"
                         ).hasAnyRole("USER", "STAFF", "ADMIN")
-
-                        // Các request còn lại phải xác thực
                         .anyRequest().authenticated()
                 )
-
-                // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    // Cấu hình CORS cho frontend (Vite chạy port 5173)
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }

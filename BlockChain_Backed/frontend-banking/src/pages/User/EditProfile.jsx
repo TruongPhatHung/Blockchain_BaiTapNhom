@@ -22,23 +22,19 @@ const EditProfile = () => {
 
     setMessage('Đang tải ảnh lên...');
     
-    // Tạo form data chứa file ảnh thực tế
     const uploadData = new FormData();
     uploadData.append('file', image);
 
     try {
-        // Gọi API upload file của Backend (ví dụ)
-        const uploadResponse = await api.post('/upload', uploadData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // CHỈNH SỬA Ở ĐÂY: Xóa bỏ headers chứa Content-Type, để Axios tự động xử lý
+        const uploadResponse = await api.post('/upload', uploadData);
         
-        // Backend trả về URL ngắn (VD: https://my-server.com/images/avatar.jpg)
         const shortImageUrl = uploadResponse.data.url; 
         
-        // Lưu URL ngắn này vào State
         setFormData((current) => ({ ...current, avatarUrl: shortImageUrl }));
         setMessage('Tải ảnh lên thành công! Nhấn Lưu thay đổi.');
     } catch (error) {
+        console.error("Lỗi upload:", error); // Thêm log để dễ theo dõi lỗi nếu có
         setMessage('Lỗi khi tải ảnh lên máy chủ.');
     }
 };

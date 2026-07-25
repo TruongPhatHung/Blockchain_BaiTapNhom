@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { Wallet, CheckCircle2, AlertCircle, Search, Building2, Smartphone, Landmark, ArrowRight, UserX } from 'lucide-react';
+import { useLanguage } from '../../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
 import './Transfer.css';
 
 const Transfer = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage(); // KHỞI TẠO HÀM DỊCH
 
     // States quản lý Form
     const [currentAccount, setCurrentAccount] = useState('');
@@ -46,7 +48,7 @@ const Transfer = () => {
             const shortAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
             const newItem = {
                 id: Date.now(),
-                name: `Ví ${address.slice(2, 6)}`,
+                name: `${t('wallet') || 'Ví'} ${address.slice(2, 6)}`,
                 address: shortAddr,
                 fullAddress: address,
                 initials: address.slice(2, 4).toUpperCase(),
@@ -80,13 +82,13 @@ const Transfer = () => {
     const connectWallet = async () => {
         try {
             if (!window.ethereum) {
-                setNotification({ message: 'Vui lòng cài đặt MetaMask!', status: 'error' });
+                setNotification({ message: t('errInstallMetamask') || 'Vui lòng cài đặt MetaMask!', status: 'error' });
                 return;
             }
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             handleAccountChange(accounts[0]);
         } catch (error) {
-            setNotification({ message: 'Lỗi kết nối ví. Vui lòng thử lại.', status: 'error' });
+            setNotification({ message: t('errConnectWallet') || 'Lỗi kết nối ví. Vui lòng thử lại.', status: 'error' });
         }
     };
 
@@ -119,19 +121,19 @@ const Transfer = () => {
         setNotification({ message: '', status: '' });
         
         if (!currentAccount) {
-            setNotification({ message: 'Vui lòng kết nối ví trước khi chuyển!', status: 'error' });
+            setNotification({ message: t('errConnectFirst') || 'Vui lòng kết nối ví trước khi chuyển!', status: 'error' });
             return;
         }
         if (!ethers.isAddress(recipient)) {
-            setNotification({ message: 'Địa chỉ ví người nhận không hợp lệ!', status: 'error' });
+            setNotification({ message: t('errInvalidAddress') || 'Địa chỉ ví người nhận không hợp lệ!', status: 'error' });
             return;
         }
         if (parseFloat(amount) <= 0 || isNaN(amount)) {
-            setNotification({ message: 'Số tiền phải lớn hơn 0!', status: 'error' });
+            setNotification({ message: t('errAmountZero') || 'Số tiền phải lớn hơn 0!', status: 'error' });
             return;
         }
         if (parseFloat(amount) > parseFloat(balance)) {
-             setNotification({ message: 'Số dư không đủ để thực hiện giao dịch!', status: 'error' });
+             setNotification({ message: t('errInsufficientBalance') || 'Số dư không đủ để thực hiện giao dịch!', status: 'error' });
              return;
         }
 
@@ -156,8 +158,8 @@ const Transfer = () => {
     return (
         <div className="layout-wrapper">
             <div className="page-header">
-                <h1>Chuyển tiền</h1>
-                <p>Thực hiện giao dịch an toàn và nhanh chóng trên mạng lưới Sepolia.</p>
+                <h1>{t('transferTitle') || 'Chuyển tiền'}</h1>
+                <p>{t('transferDesc') || 'Thực hiện giao dịch an toàn và nhanh chóng trên mạng lưới Sepolia.'}</p>
             </div>
 
             <div className="main-content-grid">
@@ -166,38 +168,38 @@ const Transfer = () => {
                     
                     {/* Block 1: Phương thức chuyển */}
                     <div className="content-card">
-                        <h2 className="card-title">Phương thức chuyển</h2>
+                        <h2 className="card-title">{t('transferMethod') || 'Phương thức chuyển'}</h2>
                         <div className="transfer-methods">
                             <div 
                                 className={`method-box ${transferMethod === 'internal' ? 'active' : ''}`}
                                 onClick={() => setTransferMethod('internal')}
                             >
                                 <Landmark className="method-icon" size={24} />
-                                <h3>Ví thông thường</h3>
-                                <p>Miễn phí giao dịch</p>
+                                <h3>{t('normalWallet') || 'Ví thông thường'}</h3>
+                                <p>{t('freeTransaction') || 'Miễn phí giao dịch'}</p>
                             </div>
                             <div 
                                 className={`method-box ${transferMethod === 'contract' ? 'active' : ''}`}
                                 onClick={() => setTransferMethod('contract')}
                             >
                                 <Building2 className="method-icon" size={24} />
-                                <h3>Smart Contract</h3>
-                                <p>24/7 Nhanh chóng</p>
+                                <h3>{t('smartContract') || 'Smart Contract'}</h3>
+                                <p>{t('fast247') || '24/7 Nhanh chóng'}</p>
                             </div>
                             <div 
                                 className={`method-box ${transferMethod === 'ens' ? 'active' : ''}`}
                                 onClick={() => setTransferMethod('ens')}
                             >
                                 <Smartphone className="method-icon" size={24} />
-                                <h3>Qua tên miền ENS</h3>
-                                <p>Danh bạ tiện lợi</p>
+                                <h3>{t('ensDomain') || 'Qua tên miền ENS'}</h3>
+                                <p>{t('convenientContacts') || 'Danh bạ tiện lợi'}</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Block 2: Thông tin giao dịch */}
                     <div className="content-card">
-                        <h2 className="card-title">Thông tin giao dịch</h2>
+                        <h2 className="card-title">{t('transactionInfo') || 'Thông tin giao dịch'}</h2>
 
                         {notification.message && (
                             <div className={`alert-box ${notification.status}`}>
@@ -209,21 +211,21 @@ const Transfer = () => {
                         <form onSubmit={handleContinue} className="transaction-form">
                             {/* Tài khoản nguồn */}
                             <div className="form-group">
-                                <label>Tài khoản nguồn</label>
+                                <label>{t('sourceAccount') || 'Tài khoản nguồn'}</label>
                                 <div className="source-account-box">
                                     {currentAccount ? (
                                         <div className="account-info">
                                             <div className="account-address">
                                                 <Wallet size={16} className="icon-gray" />
-                                                <span>Ví: {currentAccount.slice(0, 8)}...{currentAccount.slice(-6)}</span>
+                                                <span>{t('wallet') || 'Ví'}: {currentAccount.slice(0, 8)}...{currentAccount.slice(-6)}</span>
                                             </div>
                                             <div className="account-balance text-green">
-                                                Số dư: {balance} SepoliaETH
+                                                {t('balance') || 'Số dư'}: {balance} SepoliaETH
                                             </div>
                                         </div>
                                     ) : (
                                         <button type="button" className="btn-connect" onClick={connectWallet}>
-                                            Kết nối ví MetaMask
+                                            {t('connectMetamask') || 'Kết nối ví MetaMask'}
                                         </button>
                                     )}
                                 </div>
@@ -231,11 +233,11 @@ const Transfer = () => {
 
                             {/* Địa chỉ người nhận */}
                             <div className="form-group">
-                                <label>Địa chỉ ví nhận</label>
+                                <label>{t('recipientAddress') || 'Địa chỉ ví nhận'}</label>
                                 <input
                                     type="text"
                                     className="form-control"
-                                    placeholder="Nhập địa chỉ ví 0x..."
+                                    placeholder={t('enterAddress') || 'Nhập địa chỉ ví 0x...'}
                                     value={recipient}
                                     onChange={(e) => setRecipient(e.target.value)}
                                     required
@@ -244,7 +246,7 @@ const Transfer = () => {
 
                             {/* Số tiền */}
                             <div className="form-group">
-                                <label>Số tiền (SepoliaETH)</label>
+                                <label>{t('amount') || 'Số tiền'} (SepoliaETH)</label>
                                 <div className="amount-input-wrapper">
                                     <span className="currency-symbol">ETH</span>
                                     <input
@@ -273,11 +275,11 @@ const Transfer = () => {
 
                             {/* Nội dung */}
                             <div className="form-group">
-                                <label>Nội dung chuyển tiền</label>
+                                <label>{t('transferMemo') || 'Nội dung chuyển tiền'}</label>
                                 <textarea
                                     className="form-control text-area-fix"
                                     rows="2"
-                                    placeholder="Ví dụ: Thanh toan tien cafe..."
+                                    placeholder={t('memoExample') || 'Ví dụ: Thanh toan tien cafe...'}
                                     value={memo}
                                     onChange={(e) => setMemo(e.target.value)}
                                 ></textarea>
@@ -285,10 +287,10 @@ const Transfer = () => {
 
                             <div className="form-actions">
                                 <button type="button" className="btn-cancel" onClick={() => navigate(-1)}>
-                                    Hủy
+                                    {t('cancel') || 'Hủy'}
                                 </button>
                                 <button type="submit" className="btn-submit" disabled={!currentAccount}>
-                                    Tiếp tục <ArrowRight size={16} />
+                                    {t('continue') || 'Tiếp tục'} <ArrowRight size={16} />
                                 </button>
                             </div>
                         </form>
@@ -300,14 +302,14 @@ const Transfer = () => {
                 <div className="right-column">
                     <div className="content-card">
                         <div className="card-header-flex">
-                            <h2 className="card-title mb-0">Người nhận gần đây</h2>
+                            <h2 className="card-title mb-0">{t('recentRecipients') || 'Người nhận gần đây'}</h2>
                         </div>
                         
                         <div className="search-box">
                             <Search size={15} className="search-icon" />
                             <input 
                                 type="text" 
-                                placeholder="Tìm theo tên, địa chỉ ví..." 
+                                placeholder={t('searchPlaceholder') || 'Tìm theo tên, địa chỉ ví...'} 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -336,7 +338,7 @@ const Transfer = () => {
                             ) : (
                                 <div className="empty-recipients">
                                     <UserX size={32} className="empty-icon" />
-                                    <p>Chưa có lịch sử chuyển tiền nào.</p>
+                                    <p>{t('noRecentTransfers') || 'Chưa có lịch sử chuyển tiền nào.'}</p>
                                 </div>
                             )}
                         </div>

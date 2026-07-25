@@ -296,3 +296,11 @@
 .footer-links a:hover {
     color: #2563eb;
 }
+/* CSS cho ảnh đại diện thật trên Navbar */
+.user-avatar-image {
+    width: 40px; /* Hoặc kích thước bằng với width của .user-avatar-circle */
+    height: 40px; /* Hoặc kích thước bằng với height của .user-avatar-circle */
+    border-radius: 50%;
+    object-fit: cover; /* Đảm bảo ảnh không bị méo khi thu nhỏ */
+    border: 2px solid #e5e7eb; /* Thêm viền nhẹ cho đẹp (tùy chọn) */
+}

@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+
 public class AuthController {
 
     @Autowired
@@ -21,6 +21,7 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
     // API: Đăng nhập hệ thống
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
