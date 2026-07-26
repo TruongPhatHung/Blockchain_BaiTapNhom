@@ -1,6 +1,5 @@
 server:
   port: 8080 # 🌟 ĐIỂM SỬA QUAN TRỌNG: Đổi từ 8081 về 8080 để khớp với ReactJS
-
 spring:
   application:
     name: BlockChain_Backed
@@ -8,9 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/mini_banking_blockchain
     username: postgres
-    password: 12345 # Đảm bảo đúng mật khẩu PostgreSQL của bạn
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update # Tự động tạo/cập nhật bảng từ code Java
