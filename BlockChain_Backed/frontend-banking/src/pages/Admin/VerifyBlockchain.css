@@ -1,177 +1,135 @@
 /* src/pages/Admin/VerifyBlockchain.css */
+
 .verify-container {
-    background-color: white;
-    padding: 40px;
+    background-color: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    max-width: 600px;
-    margin: 40px auto;
-}
-
-.verify-title {
-    font-size: 24px;
-    color: #001529;
-    margin-bottom: 15px;
-}
-
-.verify-desc {
-    color: #595959;
-    margin-bottom: 30px;
-    line-height: 1.6;
-}
-
-.btn-verify {
-    background-color: #1890ff;
-    color: white;
-    border: none;
-    padding: 15px 40px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 10px rgba(24, 144, 255, 0.3);
-}
-
-.btn-verify:hover {
-    background-color: #0050b3;
-    transform: translateY(-2px);
-}
-
-.btn-verify:disabled {
-    background-color: #d9d9d9;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.verify-result {
-    margin-top: 30px;
-    padding: 20px;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: bold;
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-.result-valid {
-    background-color: #f6ffed;
-    color: #52c41a;
-    border: 2px solid #b7eb8f;
-}
-
-.result-invalid {
-    background-color: #fff2f0;
-    color: #ff4d4f;
-    border: 2px solid #ffccc7;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}.verify-container {
-    padding: 24px;
-    background-color: #f8f9fa;
-    min-height: 100vh;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .verify-header {
+    padding: 24px 32px;
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    background: #f8fafc;
+}
+
+.verify-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .btn-refresh {
-    background-color: #1890ff;
-    color: white;
-    border: none;
-    padding: 10px 18px;
+    padding: 10px 16px;
+    background-color: #ffffff;
+    color: #3b82f6;
+    border: 1px solid #bfdbfe;
     border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
 }
 
+.btn-refresh:hover {
+    background-color: #eff6ff;
+}
+
+/* --- BẢNG ĐỐI SOÁT --- */
 .audit-table-wrapper {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     overflow-x: auto;
+    padding: 0 10px 20px 10px;
 }
 
 .audit-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
-}
-
-.audit-table th, .audit-table td {
-    padding: 14px;
-    border-bottom: 1px solid #e8e8e8;
     text-align: left;
-    vertical-align: top;
 }
 
 .audit-table th {
-    background-color: #fafafa;
-    color: #595959;
+    padding: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    background-color: #ffffff;
+    border-bottom: 2px solid #e2e8f0;
 }
 
-/* Hàng bị chỉnh sửa trái phép (Tô đỏ nhạt) */
+.audit-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: top;
+    font-size: 14px;
+}
+
+/* Highlight dòng bị lỗi */
 .row-tampered {
-    background-color: #fff2f0 !important;
+    background-color: #fef2f2; /* Nền đỏ cực nhạt */
 }
-
 .row-valid:hover {
-    background-color: #f6ffed;
+    background-color: #f8fafc;
 }
 
-/* Badge trạng thái */
 .badge {
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: bold;
-    display: inline-block;
+    font-weight: 700;
 }
+.badge-success { background-color: #dcfce7; color: #166534; }
+.badge-danger { background-color: #fee2e2; color: #991b1b; }
 
-.badge-danger {
-    background-color: #ff4d4f;
-    color: white;
-}
+.data-cell div { margin-bottom: 6px; }
+.highlight-diff { color: #dc2626; font-weight: bold; }
 
-.badge-success {
-    background-color: #52c41a;
-    color: white;
-}
-
-/* Nổi bật ô dữ liệu bị sai lệch */
-.highlight-diff {
-    color: #cf1322;
-    background-color: #ffccc7;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
+/* Khu vực Hash */
 .hash-box {
-    background: #f5f5f5;
-    padding: 8px;
-    border-radius: 4px;
+    background-color: #f1f5f9;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.hash-text {
     font-family: monospace;
     font-size: 11px;
-}
-
-.hash-text {
     word-break: break-all;
-    color: #262626;
-    margin-bottom: 6px;
+    color: #64748b;
+    margin: 4px 0 8px 0;
 }
 
 .alert-box {
-    margin-top: 8px;
-    color: #a8071a;
-    font-size: 12px;
-    font-weight: bold;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
 }
+
+/* Nút Khôi phục nằm trong dòng lỗi */
+.btn-restore {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: #10b981; /* Xanh ngọc lục bảo */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+.btn-restore:hover { background-color: #059669; }

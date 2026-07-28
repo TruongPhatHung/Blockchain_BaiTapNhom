@@ -3,8 +3,10 @@ package com.ctut.wms.blockchain_backed.service;
 import com.ctut.wms.blockchain_backed.entity.Account;
 import com.ctut.wms.blockchain_backed.entity.Notification;
 import com.ctut.wms.blockchain_backed.entity.Transaction;
+import com.ctut.wms.blockchain_backed.entity.TransactionBackup;
 import com.ctut.wms.blockchain_backed.repository.AccountRepository;
 import com.ctut.wms.blockchain_backed.repository.NotificationRepository;
+import com.ctut.wms.blockchain_backed.repository.TransactionBackupRepository;
 import com.ctut.wms.blockchain_backed.repository.TransactionRepository;
 import com.ctut.wms.blockchain_backed.util.BlockchainUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +88,10 @@ public class TransactionService {
         );
 
         newTransaction.setBlockHash(newBlockHash);
+        Transaction savedTx = transactionRepository.save(newTransaction);
 
+        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        createBackup(savedTx);
         // 8. Lưu hóa đơn chờ vào CSDL
         return transactionRepository.save(newTransaction);
     }
@@ -229,7 +234,10 @@ public class TransactionService {
 
         String newBlockHash = BlockchainUtil.calculateHash("SYSTEM_DEPOSIT", receiverAccountNumber, amount.toString(), now.toString(), previousHash);
         newTransaction.setBlockHash(newBlockHash);
+        Transaction savedTx = transactionRepository.save(newTransaction);
 
+        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        createBackup(savedTx);
         return transactionRepository.save(newTransaction);
     }
 
@@ -276,7 +284,10 @@ public class TransactionService {
 
         String newBlockHash = BlockchainUtil.calculateHash(senderAccountNumber, "BILLER_" + billerCode, amount.toString(), now.toString(), previousHash);
         newTransaction.setBlockHash(newBlockHash);
+        Transaction savedTx = transactionRepository.save(newTransaction);
 
+        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        createBackup(savedTx);
         return transactionRepository.save(newTransaction);
     }
     /**
@@ -325,5 +336,105 @@ public class TransactionService {
         }
 
         return tamperedIds;
+    }
+    @Autowired
+    private TransactionBackupRepository backupRepository;
+    /**
+     * Hàm lấy dữ liệu chuẩn từ Node Sao Lưu để đè lên Node bị lỗi
+     */
+    @Transactional
+    public void restoreTamperedBlock(Long txId) {
+        // 1. Tìm bản sao lưu chuẩn xác trong Database
+        TransactionBackup backup = backupRepository.findById(txId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bản sao lưu của khối này!"));
+
+        // 2. Tìm khối đang bị lỗi ở sổ cái chính
+        Transaction corruptedTx = transactionRepository.findById(txId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch!"));
+
+        // 3. Phục hồi lại toàn bộ dữ liệu (Khôi phục Số tiền và Nội dung)
+        corruptedTx.setAmount(backup.getAmount());
+        corruptedTx.setDescription(backup.getDescription());
+        // Khôi phục lại Hash nếu cần thiết để chuỗi xanh lại
+        corruptedTx.setBlockHash(backup.getBlockHash());
+
+        // 4. Lưu lại sổ cái chính đã được làm sạch
+        transactionRepository.save(corruptedTx);
+    }
+
+
+
+    /**
+     * Hàm đối soát và xuất báo cáo chi tiết cho trang Verify Blockchain (ReactJS)
+     */
+    public java.util.List<java.util.Map<String, Object>> getBlockchainAuditReport() {
+        java.util.List<java.util.Map<String, Object>> report = new java.util.ArrayList<>();
+
+        // Lấy toàn bộ sổ cái hiện tại
+        java.util.List<Transaction> currentChain = transactionRepository.findAll(org.springframework.data.domain.Sort.by("transactionId").ascending());
+
+        for (int i = 0; i < currentChain.size(); i++) {
+            Transaction currentTx = currentChain.get(i);
+            java.util.Map<String, Object> item = new java.util.HashMap<>();
+
+            item.put("blockIndex", i + 1);
+            item.put("transactionId", currentTx.getTransactionId());
+            item.put("currentHash", currentTx.getBlockHash());
+
+            // Lấy dữ liệu gốc từ Node Sao lưu (Backup)
+            TransactionBackup backupTx = backupRepository.findById(currentTx.getTransactionId()).orElse(null);
+
+            boolean isTampered = false;
+
+            // Đóng gói Dữ liệu hiện tại trong DB
+            java.util.Map<String, Object> dbData = new java.util.HashMap<>();
+            dbData.put("accountNumber", currentTx.getReceiverAccount());
+            dbData.put("amount", currentTx.getAmount());
+            dbData.put("description", currentTx.getDescription());
+            item.put("dbData", dbData);
+
+            // Đóng gói Dữ liệu gốc Blockchain
+            java.util.Map<String, Object> blockchainData = new java.util.HashMap<>();
+            if (backupTx != null) {
+                blockchainData.put("accountNumber", backupTx.getReceiverAccount());
+                blockchainData.put("amount", backupTx.getAmount());
+                blockchainData.put("description", backupTx.getDescription());
+                item.put("previousHash", backupTx.getBlockHash()); // Hiển thị mã băm gốc
+
+                // Kiểm tra xem dữ liệu có bị can thiệp không
+                if (currentTx.getAmount().compareTo(backupTx.getAmount()) != 0 ||
+                        !currentTx.getDescription().equals(backupTx.getDescription())) {
+                    isTampered = true;
+                }
+            } else {
+                // Nếu không có backup, dùng luôn dữ liệu hiện tại làm gốc
+                blockchainData = dbData;
+                item.put("previousHash", currentTx.getPreviousHash());
+            }
+
+            item.put("blockchainData", blockchainData);
+            item.put("isTampered", isTampered);
+
+            report.add(item);
+        }
+        return report;
+    }
+    /**
+     * Hàm phụ trợ: Chụp ảnh giao dịch và lưu vào Node Sao Lưu (Backup)
+     */
+    private void createBackup(Transaction savedTx) {
+        TransactionBackup backup = new TransactionBackup();
+        // Copy toàn bộ dữ liệu từ giao dịch gốc sang bản sao lưu
+        backup.setTransactionId(savedTx.getTransactionId()); // ID phải khớp nhau
+        backup.setSenderAccount(savedTx.getSenderAccount());
+        backup.setReceiverAccount(savedTx.getReceiverAccount());
+        backup.setAmount(savedTx.getAmount());
+        backup.setDescription(savedTx.getDescription());
+        backup.setBlockHash(savedTx.getBlockHash());
+        backup.setPreviousHash(savedTx.getPreviousHash());
+        backup.setTimestamp(savedTx.getTimestamp());
+
+        // Lưu vào Database
+        backupRepository.save(backup);
     }
 }
