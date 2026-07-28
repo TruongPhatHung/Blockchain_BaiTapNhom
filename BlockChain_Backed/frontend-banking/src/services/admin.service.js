@@ -19,11 +19,21 @@ const adminService = {
         const response = await api.put(`/admin/tamper/${txId}`, tamperedData);
         return response.data;
     },
+   // Thêm các hàm này vào bên trong object adminService
     getRawDatabaseRecords: async () => {
-        // Gọi đến một Endpoint chuyên để đọc thẳng vào bảng SQL
         const response = await api.get('/admin/database-rows');
         return response.data;
-    }
+    },
+
+    tamperTransaction: async (txId, tamperedData) => {
+        const response = await api.put(`/admin/tamper/${txId}`, tamperedData);
+        return response.data;
+    },
+    // Thêm vào bên trong đối tượng adminService
+    restoreTransaction: async (txId) => {
+        const response = await api.post(`/admin/restore/${txId}`);
+        return response.data;
+    },
 };
 
 export default adminService;

@@ -1,84 +1,128 @@
 /* src/pages/Admin/DatabaseEditor.css */
+
 .db-editor-container {
-    padding: 20px;
-    font-family: monospace; /* Font chữ kiểu code/terminal */
-    background-color: #fafafa;
-    min-height: 100vh;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    overflow: hidden; 
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* --- PHẦN TIÊU ĐỀ --- */
 .db-editor-header {
-    background-color: #7f1d1d; /* Màu đỏ sẫm cảnh báo */
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 24px 32px;
+    border-bottom: 1px solid #f1f5f9;
+    background: linear-gradient(to right, #fffbeb, #ffffff); /* Nền ngả vàng nhạt rất nhẹ */
 }
 
 .db-editor-title {
-    margin: 0 0 10px 0;
-    font-size: 24px;
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #d97706; /* Màu cam đất (Amber) - Cảnh báo nhưng tinh tế */
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .db-editor-subtitle {
     margin: 0;
     font-size: 14px;
-    opacity: 0.9;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* --- PHẦN BẢNG DỮ LIỆU --- */
+.db-table-wrapper {
+    overflow-x: auto;
+    padding: 0 10px 20px 10px;
 }
 
 .db-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.db-table th, .db-table td {
-    padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0;
 }
 
 .db-table th {
-    background-color: #f1f5f9;
-    font-weight: bold;
+    background-color: #ffffff;
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 600;
     color: #475569;
+    text-transform: uppercase; /* Viết hoa tiêu đề */
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #f1f5f9;
 }
 
+.db-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f8fafc;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.db-table tbody tr:hover {
+    background-color: #f8fafc; /* Đổi màu rất nhẹ khi lướt chuột qua dòng */
+}
+
+/* Đóng khung (Badge) cho Mã Khối */
+.tx-id-badge {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* --- Ô NHẬP LIỆU (INPUT) --- */
 .tamper-input {
     width: 100%;
-    padding: 8px;
+    padding: 10px 14px;
     border: 1px solid #cbd5e1;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-size: 14px;
     font-family: inherit;
+    transition: all 0.2s ease;
     box-sizing: border-box;
+    background-color: #f8fafc;
 }
 
 .tamper-input:focus {
-    border-color: #ef4444;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    background-color: #ffffff;
+    border-color: #f59e0b; /* Viền cam khi nhấp vào */
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); /* Bóng mờ toả ra */
 }
 
+/* --- NÚT BẤM LƯU --- */
 .btn-save-tamper {
-    padding: 8px 12px;
-    background-color: #dc2626;
-    color: white;
+    padding: 10px 16px;
+    background-color: #ef4444; /* Đỏ nhạt hiện đại */
+    color: #ffffff;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
-    font-family: inherit;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
-.btn-save-tamper:hover {
-    background-color: #b91c1c;
+.btn-save-tamper:hover:not(:disabled) {
+    background-color: #dc2626;
+    box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
 }
 
 .btn-save-tamper:disabled {
-    opacity: 0.5;
+    background-color: #fca5a5;
     cursor: not-allowed;
+}
+
+.loading-text {
+    padding: 40px;
+    text-align: center;
+    color: #64748b;
+    font-size: 15px;
 }

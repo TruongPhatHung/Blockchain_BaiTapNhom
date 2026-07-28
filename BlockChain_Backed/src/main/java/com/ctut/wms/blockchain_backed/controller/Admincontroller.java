@@ -73,17 +73,25 @@ public class Admincontroller {
      * GET /api/admin/verify-blockchain
      */
     @GetMapping("/verify-blockchain")
-    public ResponseEntity<?> verifySystem() {
-        List<Long> tamperedIds = transactionService.getTamperedTransactionIds();
+    public ResponseEntity<List<Map<String, Object>>> verifySystem() {
+        // Lấy báo cáo đối soát chi tiết từ TransactionService
+        List<Map<String, Object>> auditReport = transactionService.getBlockchainAuditReport();
 
-        if (tamperedIds.isEmpty()) {
-            return ResponseEntity.ok("Hệ thống an toàn. Dữ liệu toàn vẹn chỉnh chu.");
-        }
-
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("message", "CẢNH BÁO: Phát hiện dữ liệu sổ cái đã bị thay đổi trái phép!");
-        errorResponse.put("tamperedIds", tamperedIds);
-
-        return ResponseEntity.status(400).body(errorResponse);
+        // Trả về dữ liệu dạng JSON với mã trạng thái 200 OK
+        return ResponseEntity.ok(auditReport);
     }
+    /**
+     * POST /api/admin/restore/{txId}
+     */
+    @PostMapping("/restore/{txId}")
+    public ResponseEntity<?> restoreBlock(@PathVariable Long txId) {
+        try {
+            transactionService.restoreTamperedBlock(txId);
+            return ResponseEntity.ok("Khôi phục dữ liệu Khối #" + txId + " thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi khi khôi phục: " + e.getMessage());
+        }
+    }
+
+
 }

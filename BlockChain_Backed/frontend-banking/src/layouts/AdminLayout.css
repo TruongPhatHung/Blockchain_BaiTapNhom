@@ -1,82 +1,130 @@
 /* src/layouts/AdminLayout.css */
+
+/* Bố cục tổng thể của toàn bộ trang Admin */
 .admin-layout {
     display: flex;
-    height: 100vh;
-    background-color: #f4f6f9;
+    height: 100vh; /* Chiều cao chiếm toàn bộ màn hình */
+    background-color: #f1f5f9; /* Nền xám nhạt cho vùng nội dung */
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* --- THANH BÊN (SIDEBAR) --- */
 .admin-sidebar {
-    width: 260px;
-    background-color: #001529;
-    color: white;
+    width: 280px;
+    background-color: #0f172a; /* Màu xanh đen cực kỳ sang trọng */
+    color: #94a3b8; /* Chữ xám nhạt */
     display: flex;
     flex-direction: column;
-    padding: 20px 0;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    z-index: 10;
 }
 
+/* Phần Logo trên cùng */
 .admin-sidebar-logo {
-    text-align: center;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
     font-size: 20px;
-    font-weight: bold;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #002140;
-    color: #1890ff;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #1e293b; /* Đường kẻ viền mỏng */
+    gap: 12px;
 }
 
+/* Danh sách menu */
 .admin-sidebar-menu {
+    flex: 1; /* Tự động giãn ra để đẩy nút Đăng xuất xuống đáy */
     list-style: none;
-    padding: 20px 0;
+    padding: 24px 16px;
     margin: 0;
-    flex-grow: 1;
-}
-
-.admin-sidebar-item {
-    padding: 15px 25px;
-    cursor: pointer;
-    display: block;
-    color: #a6adb4;
-    text-decoration: none;
-    font-size: 16px;
-    transition: all 0.3s;
-}
-
-.admin-sidebar-item:hover, .admin-sidebar-item.active {
-    color: white;
-    background-color: #1890ff;
-}
-
-.admin-logout-btn {
-    padding: 15px 25px;
-    background-color: #ff4d4f;
-    color: white;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.admin-main-content {
-    flex-grow: 1;
     display: flex;
     flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa các nút */
     overflow-y: auto;
 }
 
-.admin-main-header {
-    background-color: white;
-    padding: 15px 30px;
+.admin-sidebar-menu li {
+    margin: 0;
+}
+
+/* Từng mục (item) trong menu */
+.admin-sidebar-item {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 8px; /* Bo góc mềm mại */
+    text-decoration: none;
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 15px;
+    transition: all 0.2s ease-in-out; /* Hiệu ứng chuyển màu mượt mà */
+}
+
+/* Khi di chuột qua (Hover) */
+.admin-sidebar-item:hover {
+    background-color: #1e293b;
+    color: #f8fafc;
+}
+
+/* Khi đang ở trang đó (Active) */
+.admin-sidebar-item.active {
+    background-color: #3b82f6; /* Xanh dương nổi bật */
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* --- NÚT ĐĂNG XUẤT --- */
+.admin-logout-btn {
+    margin: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: transparent;
+    color: #ef4444; /* Chữ màu đỏ */
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.admin-logout-btn:hover {
+    background-color: #ef4444; /* Đổi nền đỏ khi di chuột */
+    color: #ffffff;
+}
+
+/* --- VÙNG NỘI DUNG BÊN PHẢI --- */
+.admin-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.admin-main-header {
+    height: 70px;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Đẩy tên admin sang bên phải */
+    padding: 0 32px;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .admin-user-info {
-    font-weight: bold;
-    color: #333;
+    font-size: 15px;
+    color: #475569;
 }
 
 .admin-content-body {
-    padding: 30px;
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto; /* Cho phép cuộn nếu nội dung trang dài */
 }
