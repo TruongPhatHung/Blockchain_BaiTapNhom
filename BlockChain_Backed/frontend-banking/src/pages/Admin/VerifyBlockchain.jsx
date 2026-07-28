@@ -27,15 +27,25 @@ const VerifyBlockchain = () => {
 
     // ĐÃ SỬA: Tách hàm khôi phục riêng biệt và nhận đúng ID của khối
     const handleRestore = async (txId) => {
-        if (!window.confirm(`Bạn có chắc muốn khôi phục dữ liệu Khối #${txId} từ Node dự phòng?`)) return;
+        if (!window.confirm(`Bạn có chắc chắn muốn khôi phục dữ liệu gốc cho Khối #${txId}?`)) {
+            return;
+        }
 
         try {
+            const responseMessage = await adminService.restoreTransaction(txId);
+
+            // Báo thành công
+            alert(`✅ THÀNH CÔNG: ${responseMessage}`);
             await adminService.restoreTransaction(txId);
             alert(`Thành công! Khối #${txId} đã được khôi phục về nguyên bản.`);
             fetchVerificationData(); // Tải lại bảng để thấy kết quả xanh an toàn
         } catch (error) {
-            console.error("Lỗi khôi phục:", error);
-            alert("Có lỗi xảy ra khi khôi phục dữ liệu!");
+            // Bóc tách câu thông báo lỗi thực sự từ Backend trả về
+            const backendErrorMsg = error.response?.data || error.message;
+
+            // Báo lỗi chi tiết
+            alert(`❌ THẤT BẠI: ${backendErrorMsg}\n\n(Gợi ý: Có thể khối dữ liệu này quá cũ và chưa có bản sao lưu)`);
+            console.error("Chi tiết lỗi khôi phục:", error);
         }
     };
 

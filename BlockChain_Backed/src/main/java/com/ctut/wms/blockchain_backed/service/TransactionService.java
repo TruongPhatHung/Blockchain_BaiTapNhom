@@ -10,11 +10,21 @@ import com.ctut.wms.blockchain_backed.repository.TransactionBackupRepository;
 import com.ctut.wms.blockchain_backed.repository.TransactionRepository;
 import com.ctut.wms.blockchain_backed.util.BlockchainUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,76 +37,72 @@ public class TransactionService {
     private NotificationRepository notificationRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private TransactionBackupRepository backupRepository;
 
+    /**
+     * HÀM BẢO VỆ CHUỖI SỐ: Cắt bỏ các số 0 vô nghĩa ở đuôi (VD: 0.0200 -> 0.02)
+     */
+    private String formatAmountForHash(BigDecimal amount) {
+        if (amount == null) return "0";
+        return amount.stripTrailingZeros().toPlainString();
+    }
 
-    // TẠO GIAO DỊCH CHỜ KÝ METAMASK CẬP NHẬT CATEGORY & BANK NAME
+    // TẠO GIAO DỊCH CHỜ KÝ METAMASK
     @Transactional
     public Transaction transferMoney(String senderAccountNumber, String receiverAccountNumber, String receiverBankName, BigDecimal amount, String category, String description) {
-
-        // 1. Kiểm tra số tiền hợp lệ
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Số tiền giao dịch phải lớn hơn 0");
         }
 
-        // 2. Tìm tài khoản người gửi
         Account sender = accountRepository.findByAccountNumber(senderAccountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người gửi"));
 
-        // 3. Xử lý người nhận tùy theo loại hình chuyển khoản
         if (receiverBankName == null || receiverBankName.equalsIgnoreCase("Lumina Bank")) {
-            // Nếu là chuyển nội bộ: Bắt buộc phải tìm thấy người nhận trong Database
             accountRepository.findByAccountNumber(receiverAccountNumber)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người nhận nội bộ"));
         }
 
-        // 4. Kiểm tra số dư người gửi (Không trừ tiền ở bước này)
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Số dư không đủ để thực hiện giao dịch");
         }
 
-        // 5. Khởi tạo dữ liệu giao dịch mới (On-chain)
         Transaction newTransaction = new Transaction();
         newTransaction.setSenderAccount(senderAccountNumber);
         newTransaction.setReceiverAccount(receiverAccountNumber);
-
-        // --- HAI TRƯỜNG DỮ LIỆU MỚI ---
-        newTransaction.setReceiverBankName(receiverBankName); // Lưu tên ngân hàng
-        newTransaction.setCategory(category);                 // Lưu danh mục chi tiêu (VD: SHOPPING, FOOD)
-
+        newTransaction.setReceiverBankName(receiverBankName);
+        newTransaction.setCategory(category);
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("CHUYEN_TIEN");
         newTransaction.setDescription(description);
-        newTransaction.setStatus("PENDING"); // Đang chờ MetaMask
+        newTransaction.setStatus("PENDING");
 
-        LocalDateTime now = LocalDateTime.now();
+        // ĐÃ SỬA: Cắt bỏ phần lẻ mili-giây để CSDL lưu trữ và Java đồng nhất 100%
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         newTransaction.setTimestamp(now);
 
-        // 6. Lấy mã băm của khối cuối cùng
         Transaction lastTransaction = transactionRepository.findLastTransaction()
                 .orElseThrow(() -> new RuntimeException("Hệ thống chưa có khối Khởi nguồn (Genesis Block)"));
 
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        // 7. Đào khối: Tính toán mã băm
         String newBlockHash = BlockchainUtil.calculateHash(
                 senderAccountNumber,
                 receiverAccountNumber,
-                amount.toString(),
+                formatAmountForHash(amount), // Dùng hàm an toàn
+                description,
                 now.toString(),
                 previousHash
         );
-
         newTransaction.setBlockHash(newBlockHash);
-        Transaction savedTx = transactionRepository.save(newTransaction);
 
-        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        Transaction savedTx = transactionRepository.save(newTransaction);
         createBackup(savedTx);
-        // 8. Lưu hóa đơn chờ vào CSDL
-        return transactionRepository.save(newTransaction);
+        return savedTx;
     }
 
-    //  METAMASK BÁO THÀNH CÔNG -> TIẾN HÀNH TRỪ TIỀN
+    // METAMASK BÁO THÀNH CÔNG -> TIẾN HÀNH TRỪ TIỀN
     @Transactional
     public Transaction confirmTransaction(Long transactionId, String onChainTxHash) {
         Transaction tx = transactionRepository.findById(transactionId)
@@ -106,13 +112,11 @@ public class TransactionService {
             throw new RuntimeException("Giao dịch này đã được xử lý!");
         }
 
-        // 1. Trừ tiền người gửi
         Account sender = accountRepository.findByAccountNumber(tx.getSenderAccount())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người gửi"));
         sender.setBalance(sender.getBalance().subtract(tx.getAmount()));
         accountRepository.save(sender);
 
-        // 2. An toàn: Chỉ cộng tiền & tạo thông báo nếu người nhận thuộc ngân hàng nội bộ
         accountRepository.findByAccountNumber(tx.getReceiverAccount()).ifPresent(receiver -> {
             receiver.setBalance(receiver.getBalance().add(tx.getAmount()));
             accountRepository.save(receiver);
@@ -125,17 +129,12 @@ public class TransactionService {
             notificationRepository.save(notification);
         });
 
-        // 3. Cập nhật trạng thái giao dịch
         tx.setStatus("SUCCESS");
         tx.setOnChainTxHash(onChainTxHash);
 
         return transactionRepository.save(tx);
     }
 
-    /**
-     * Lưu giao dịch đã được xác nhận trên MetaMask/Sepolia. Luồng này tách biệt
-     * với chuyển khoản nội bộ VND vì địa chỉ ví Ethereum không phải số tài khoản.
-     */
     @Transactional
     public Transaction recordOnChainTransfer(String senderWallet, String receiverWallet,
                                              BigDecimal amount, String description,
@@ -144,7 +143,7 @@ public class TransactionService {
             throw new RuntimeException("Số tiền giao dịch phải lớn hơn 0");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         String previousHash = transactionRepository.findLastTransaction()
                 .map(Transaction::getBlockHash)
                 .orElse("GENESIS");
@@ -161,15 +160,15 @@ public class TransactionService {
         transaction.setOnChainTxHash(onChainTxHash);
         transaction.setTimestamp(now);
         transaction.setPreviousHash(previousHash);
-        transaction.setBlockHash(BlockchainUtil.calculateHash(
-                senderWallet, receiverWallet, amount.toPlainString(), now.toString(), previousHash));
 
-        return transactionRepository.save(transaction);
+        transaction.setBlockHash(BlockchainUtil.calculateHash(
+                senderWallet, receiverWallet, formatAmountForHash(amount), description, now.toString(), previousHash));
+
+        Transaction savedTx = transactionRepository.save(transaction);
+        createBackup(savedTx);
+        return savedTx;
     }
 
-    /**
-     * Hàm chạy kiểm tra tính toàn vẹn của toàn bộ sổ cái (Dành cho Admin)
-     */
     public boolean verifyBlockchainIntegrity() {
         List<Transaction> chain = transactionRepository.findAll(org.springframework.data.domain.Sort.by("transactionId").ascending());
 
@@ -185,7 +184,8 @@ public class TransactionService {
             String recalculatedHash = BlockchainUtil.calculateHash(
                     currentBlock.getSenderAccount(),
                     currentBlock.getReceiverAccount(),
-                    currentBlock.getAmount().toString(),
+                    formatAmountForHash(currentBlock.getAmount()),
+                    currentBlock.getDescription(),
                     currentBlock.getTimestamp().toString(),
                     currentBlock.getPreviousHash()
             );
@@ -195,14 +195,10 @@ public class TransactionService {
                 return false;
             }
         }
-
         System.out.println("HỆ THỐNG AN TOÀN: Dữ liệu toàn vẹn.");
         return true;
     }
 
-    /**
-     * Hàm xử lý Nạp tiền (Hệ thống chuyển tiền vào tài khoản người dùng)
-     */
     @Transactional
     public Transaction depositMoney(String receiverAccountNumber, BigDecimal amount, String description) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -221,9 +217,9 @@ public class TransactionService {
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType("NAP_TIEN");
         newTransaction.setDescription(description);
-        newTransaction.setStatus("SUCCESS"); // Nạp tiền nội bộ thành công luôn
+        newTransaction.setStatus("SUCCESS");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         newTransaction.setTimestamp(now);
 
         Transaction lastTransaction = transactionRepository.findLastTransaction()
@@ -232,23 +228,18 @@ public class TransactionService {
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        String newBlockHash = BlockchainUtil.calculateHash("SYSTEM_DEPOSIT", receiverAccountNumber, amount.toString(), now.toString(), previousHash);
+        String newBlockHash = BlockchainUtil.calculateHash("SYSTEM_DEPOSIT", receiverAccountNumber, formatAmountForHash(amount), description, now.toString(), previousHash);
         newTransaction.setBlockHash(newBlockHash);
-        Transaction savedTx = transactionRepository.save(newTransaction);
 
-        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        Transaction savedTx = transactionRepository.save(newTransaction);
         createBackup(savedTx);
-        return transactionRepository.save(newTransaction);
+        return savedTx;
     }
 
-    /**
-     * Hàm lấy lịch sử giao dịch của một người
-     */
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactionRepository.findBySenderAccountOrReceiverAccountOrderByTimestampDesc(accountNumber, accountNumber);
     }
 
-    /**THANH TOÁN HÓA ĐƠN*/
     @Transactional
     public Transaction payBill(String senderAccountNumber, String billerCode, BigDecimal amount, String billType, String description) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -271,9 +262,9 @@ public class TransactionService {
         newTransaction.setAmount(amount);
         newTransaction.setTransactionType(billType);
         newTransaction.setDescription(description);
-        newTransaction.setStatus("SUCCESS"); // Hóa đơn xử lý nội bộ thành công luôn
+        newTransaction.setStatus("SUCCESS");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         newTransaction.setTimestamp(now);
 
         Transaction lastTransaction = transactionRepository.findLastTransaction()
@@ -282,95 +273,73 @@ public class TransactionService {
         String previousHash = lastTransaction.getBlockHash();
         newTransaction.setPreviousHash(previousHash);
 
-        String newBlockHash = BlockchainUtil.calculateHash(senderAccountNumber, "BILLER_" + billerCode, amount.toString(), now.toString(), previousHash);
+        String newBlockHash = BlockchainUtil.calculateHash(senderAccountNumber, "BILLER_" + billerCode, formatAmountForHash(amount), description, now.toString(), previousHash);
         newTransaction.setBlockHash(newBlockHash);
-        Transaction savedTx = transactionRepository.save(newTransaction);
 
-        // 9. LƯU BẢN SAO VÀO NODE TRUNG THỰC
+        Transaction savedTx = transactionRepository.save(newTransaction);
         createBackup(savedTx);
-        return transactionRepository.save(newTransaction);
+        return savedTx;
     }
-    /**
-     * Lấy toàn bộ danh sách giao dịch thô từ cơ sở dữ liệu (Dành cho trang Quản trị Database Editor)
-     */
+
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
     }
-    /**
 
-     * Cố tình ghi đè amount/description nhưng KHÔNG tính lại blockHash để mô phỏng bị hack.
-     */
     @Transactional
     public void tamperTransactionData(Long txId, BigDecimal newAmount, String newDescription) {
         Transaction tx = transactionRepository.findById(txId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch ID: " + txId));
 
-        if (newAmount != null) {
-            tx.setAmount(newAmount);
-        }
-        if (newDescription != null) {
-            tx.setDescription(newDescription);
-        }
+        System.out.println("🚨 [HỆ THỐNG CẢNH BÁO] - CÓ KẺ ĐANG THAO TÚNG DATABASE!");
+        System.out.println("- Khối mục tiêu: #" + txId);
+
+        if (newAmount != null) tx.setAmount(newAmount);
+        if (newDescription != null) tx.setDescription(newDescription);
 
         transactionRepository.save(tx);
     }
-    // Hàm mới: Trả về danh sách ID của các giao dịch bị sửa lén
+
     public List<Long> getTamperedTransactionIds() {
         List<Long> tamperedIds = new ArrayList<>();
         List<Transaction> allTransactions = transactionRepository.findAll();
 
         for (Transaction tx : allTransactions) {
-            // Tính toán lại Hash dựa trên dữ liệu hiện tại trong DB
-            String dataToHash = tx.getSenderAccount() +
-                    tx.getReceiverAccount() +
-                    tx.getAmount() +
-                    tx.getDescription() +
-                    tx.getPreviousHash(); // Thêm các trường bạn dùng để băm
+            String calculatedHash = BlockchainUtil.calculateHash(
+                    tx.getSenderAccount(),
+                    tx.getReceiverAccount(),
+                    formatAmountForHash(tx.getAmount()),
+                    tx.getDescription(),
+                    tx.getTimestamp().toString(),
+                    tx.getPreviousHash()
+            );
 
-            String calculatedHash = BlockchainUtil.calculateHash(dataToHash); // Dùng class Hash của bạn
-
-            // Nếu Hash tính lại KHÔNG KHỚP với Hash lưu trong DB -> Ghi sổ đen!
             if (!calculatedHash.equals(tx.getBlockHash())) {
                 tamperedIds.add(tx.getTransactionId());
             }
         }
-
         return tamperedIds;
     }
-    @Autowired
-    private TransactionBackupRepository backupRepository;
-    /**
-     * Hàm lấy dữ liệu chuẩn từ Node Sao Lưu để đè lên Node bị lỗi
-     */
+
     @Transactional
     public void restoreTamperedBlock(Long txId) {
-        // 1. Tìm bản sao lưu chuẩn xác trong Database
         TransactionBackup backup = backupRepository.findById(txId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bản sao lưu của khối này!"));
 
-        // 2. Tìm khối đang bị lỗi ở sổ cái chính
         Transaction corruptedTx = transactionRepository.findById(txId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch!"));
 
-        // 3. Phục hồi lại toàn bộ dữ liệu (Khôi phục Số tiền và Nội dung)
         corruptedTx.setAmount(backup.getAmount());
         corruptedTx.setDescription(backup.getDescription());
-        // Khôi phục lại Hash nếu cần thiết để chuỗi xanh lại
         corruptedTx.setBlockHash(backup.getBlockHash());
 
-        // 4. Lưu lại sổ cái chính đã được làm sạch
         transactionRepository.save(corruptedTx);
     }
 
-
-
     /**
-     * Hàm đối soát và xuất báo cáo chi tiết cho trang Verify Blockchain (ReactJS)
+     * HÀM ĐỐI SOÁT CHUẨN BLOCKCHAIN
      */
     public java.util.List<java.util.Map<String, Object>> getBlockchainAuditReport() {
         java.util.List<java.util.Map<String, Object>> report = new java.util.ArrayList<>();
-
-        // Lấy toàn bộ sổ cái hiện tại
         java.util.List<Transaction> currentChain = transactionRepository.findAll(org.springframework.data.domain.Sort.by("transactionId").ascending());
 
         for (int i = 0; i < currentChain.size(); i++) {
@@ -379,53 +348,52 @@ public class TransactionService {
 
             item.put("blockIndex", i + 1);
             item.put("transactionId", currentTx.getTransactionId());
-            item.put("currentHash", currentTx.getBlockHash());
 
-            // Lấy dữ liệu gốc từ Node Sao lưu (Backup)
+            // ÉP TÍNH LẠI HASH VỚI DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA
+            String recalculatedHash = BlockchainUtil.calculateHash(
+                    currentTx.getSenderAccount(),
+                    currentTx.getReceiverAccount(),
+                    formatAmountForHash(currentTx.getAmount()), // Cắt số 0 dư thừa
+                    currentTx.getDescription(),
+                    currentTx.getTimestamp().toString(),
+                    currentTx.getPreviousHash()
+            );
+
             TransactionBackup backupTx = backupRepository.findById(currentTx.getTransactionId()).orElse(null);
+            String originalHash = (backupTx != null) ? backupTx.getBlockHash() : currentTx.getBlockHash();
+            boolean isTampered = !recalculatedHash.equals(originalHash);
 
-            boolean isTampered = false;
-
-            // Đóng gói Dữ liệu hiện tại trong DB
             java.util.Map<String, Object> dbData = new java.util.HashMap<>();
             dbData.put("accountNumber", currentTx.getReceiverAccount());
             dbData.put("amount", currentTx.getAmount());
             dbData.put("description", currentTx.getDescription());
+            dbData.put("onChainTxHash", currentTx.getOnChainTxHash());
             item.put("dbData", dbData);
 
-            // Đóng gói Dữ liệu gốc Blockchain
             java.util.Map<String, Object> blockchainData = new java.util.HashMap<>();
             if (backupTx != null) {
                 blockchainData.put("accountNumber", backupTx.getReceiverAccount());
                 blockchainData.put("amount", backupTx.getAmount());
                 blockchainData.put("description", backupTx.getDescription());
-                item.put("previousHash", backupTx.getBlockHash()); // Hiển thị mã băm gốc
-
-                // Kiểm tra xem dữ liệu có bị can thiệp không
-                if (currentTx.getAmount().compareTo(backupTx.getAmount()) != 0 ||
-                        !currentTx.getDescription().equals(backupTx.getDescription())) {
-                    isTampered = true;
-                }
+                blockchainData.put("onChainTxHash", currentTx.getOnChainTxHash());
             } else {
-                // Nếu không có backup, dùng luôn dữ liệu hiện tại làm gốc
                 blockchainData = dbData;
-                item.put("previousHash", currentTx.getPreviousHash());
             }
 
             item.put("blockchainData", blockchainData);
+            item.put("currentHash", recalculatedHash);
+            item.put("originalHash", originalHash);
+            item.put("previousHash", currentTx.getPreviousHash());
             item.put("isTampered", isTampered);
 
             report.add(item);
         }
         return report;
     }
-    /**
-     * Hàm phụ trợ: Chụp ảnh giao dịch và lưu vào Node Sao Lưu (Backup)
-     */
+
     private void createBackup(Transaction savedTx) {
         TransactionBackup backup = new TransactionBackup();
-        // Copy toàn bộ dữ liệu từ giao dịch gốc sang bản sao lưu
-        backup.setTransactionId(savedTx.getTransactionId()); // ID phải khớp nhau
+        backup.setTransactionId(savedTx.getTransactionId());
         backup.setSenderAccount(savedTx.getSenderAccount());
         backup.setReceiverAccount(savedTx.getReceiverAccount());
         backup.setAmount(savedTx.getAmount());
@@ -434,7 +402,153 @@ public class TransactionService {
         backup.setPreviousHash(savedTx.getPreviousHash());
         backup.setTimestamp(savedTx.getTimestamp());
 
-        // Lưu vào Database
         backupRepository.save(backup);
+    }
+    /**
+     * HÀM ĐỒNG BỘ TỰ ĐỘNG DỰA TRÊN ID GIAO DỊCH KHI KHỞI ĐỘNG SERVER
+     * Dùng ID của bảng transactions làm mốc, kéo dữ liệu chuẩn từ Web3 để cập nhật vào kho Backup.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void syncBackupFromWeb3OnStartup() {
+        System.out.println("🔄 [WEB3 SYNC] Bắt đầu quét danh sách giao dịch để đồng bộ kho Backup với Web3...");
+
+        List<Transaction> allTransactions = transactionRepository.findAll();
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Sử dụng RPC Node Sepolia công cộng ổn định
+        String rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
+        int syncCount = 0;
+
+        for (Transaction tx : allTransactions) {
+            String onChainHash = tx.getOnChainTxHash();
+            BigDecimal syncedAmount = tx.getAmount(); // Mặc định dùng số tiền nội bộ
+
+            // 1. Nếu giao dịch có mã onChainTxHash, tiến hành kéo dữ liệu thật từ mạng Web3
+            if (onChainHash != null && onChainHash.startsWith("0x")) {
+                try {
+                    String requestJson = String.format("{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionByHash\",\"params\":[\"%s\"],\"id\":1}", onChainHash);
+
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
+
+                    ResponseEntity<String> response = restTemplate.postForEntity(rpcUrl, entity, String.class);
+                    JsonNode root = mapper.readTree(response.getBody());
+                    JsonNode resultNode = root.path("result");
+
+                    if (!resultNode.isMissingNode() && !resultNode.isNull()) {
+                        String valueHex = resultNode.path("value").asText();
+                        if (valueHex.startsWith("0x")) {
+                            valueHex = valueHex.substring(2);
+                        }
+                        BigInteger wei = new BigInteger(valueHex, 16);
+                        // Quy đổi từ Wei sang Ether (Chuẩn xác 100% so với Etherscan)
+                        syncedAmount = new BigDecimal(wei).divide(new BigDecimal("1000000000000000000"));
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Không thể kết nối Web3 cho khối ID #" + tx.getTransactionId() + ". Giữ nguyên dữ liệu dự phòng.");
+                }
+            }
+
+            // 2. Lưu vào bảng Backup, lấy chính xác transactionId làm khóa chính để khớp với bảng chính
+            TransactionBackup backup = backupRepository.findById(tx.getTransactionId()).orElse(new TransactionBackup());
+            backup.setTransactionId(tx.getTransactionId()); // Dựa vào ID của transaction chính
+            backup.setSenderAccount(tx.getSenderAccount());
+            backup.setReceiverAccount(tx.getReceiverAccount());
+            backup.setAmount(syncedAmount); // Đã được đồng bộ chuẩn từ Web3
+            backup.setDescription(tx.getDescription());
+            backup.setBlockHash(tx.getBlockHash());
+            backup.setPreviousHash(tx.getPreviousHash());
+            backup.setTimestamp(tx.getTimestamp());
+            backup.setOnChainTxHash(onChainHash);
+
+            backupRepository.save(backup);
+            syncCount++;
+        }
+        System.out.println("✅ [WEB3 SYNC] Đã đồng bộ thành công " + syncCount + " khối vào kho Backup dựa trên ID giao dịch!");
+    }
+    /**
+     * HÀM TỰ ĐỘNG QUÉT VÀ ĐỒNG BỘ TẤT CẢ CÁC VÍ TRONG HỆ THỐNG
+     * Tự động tìm các địa chỉ ví (bắt đầu bằng 0x) từ DB nội bộ rồi kéo dữ liệu từ Etherscan về.
+     */
+    @Transactional
+    public void autoSyncAllWalletsFromBlockchain() {
+        System.out.println("🔄 [WEB3 SYNC] Đang quét các địa chỉ ví trong hệ thống để đồng bộ...");
+
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 1. TỰ ĐỘNG TÌM KIẾM: Lấy tất cả các địa chỉ ví bắt đầu bằng "0x" từ bảng giao dịch nội bộ
+        List<Transaction> allTx = transactionRepository.findAll();
+        java.util.Set<String> uniqueWallets = new java.util.HashSet<>();
+
+        for (Transaction tx : allTx) {
+            if (tx.getSenderAccount() != null && tx.getSenderAccount().startsWith("0x")) {
+                uniqueWallets.add(tx.getSenderAccount());
+            }
+            if (tx.getReceiverAccount() != null && tx.getReceiverAccount().startsWith("0x")) {
+                uniqueWallets.add(tx.getReceiverAccount());
+            }
+        }
+
+        if (uniqueWallets.isEmpty()) {
+            System.out.println("⚠️ [WEB3 SYNC] Không tìm thấy địa chỉ ví Ethereum nào trong hệ thống để đồng bộ.");
+            return;
+        }
+
+        // 2. DUYỆT QUA TỪNG VÍ VÀ GỌI API ETHERSCAN
+        for (String walletAddress : uniqueWallets) {
+            System.out.println("🔍 Đang đồng bộ cho ví: " + walletAddress);
+
+            // Link gọi API Etherscan Sepolia (Dùng khóa chung 'YourApiKeyToken' hoặc key miễn phí của bạn)
+            String apiUrl = String.format("https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=%s&startblock=0&endblock=99999999&sort=desc&apikey=YourApiKeyToken", walletAddress);
+
+            try {
+                ResponseEntity<String> response = restTemplate.getForEntity(apiUrl, String.class);
+                JsonNode root = mapper.readTree(response.getBody());
+
+                String status = root.path("status").asText();
+                if ("1".equals(status)) {
+                    JsonNode transactions = root.path("result");
+                    int syncCount = 0;
+
+                    for (JsonNode txNode : transactions) {
+                        String hash = txNode.path("hash").asText();
+                        String from = txNode.path("from").asText();
+                        String to = txNode.path("to").asText();
+                        String valueWei = txNode.path("value").asText();
+                        String timeStampStr = txNode.path("timeStamp").asText();
+
+                        BigDecimal etherAmount = new BigDecimal(valueWei).divide(new BigDecimal("1000000000000000000"));
+                        long timestamp = Long.parseLong(timeStampStr);
+                        LocalDateTime txTime = LocalDateTime.ofEpochSecond(timestamp, 0, java.time.ZoneOffset.UTC);
+
+                        // Kiểm tra xem giao dịch này đã có trong kho Backup chưa (dựa vào onChainTxHash)
+                        boolean exists = backupRepository.findAll().stream()
+                                .anyMatch(b -> b.getOnChainTxHash() != null && hash.equalsIgnoreCase(b.getOnChainTxHash()));
+
+                        if (!exists) {
+                            TransactionBackup backup = new TransactionBackup();
+                            backup.setTransactionId(System.currentTimeMillis() + syncCount);
+                            backup.setSenderAccount(from);
+                            backup.setReceiverAccount(to);
+                            backup.setAmount(etherAmount);
+                            backup.setDescription("Đồng bộ tự động từ Etherscan Web3");
+                            backup.setOnChainTxHash(hash);
+                            backup.setTimestamp(txTime);
+
+                            backupRepository.save(backup);
+                            syncCount++;
+                        }
+                    }
+                    System.out.println("✅ Đã đồng bộ thành công " + syncCount + " giao dịch cho ví " + walletAddress);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Lỗi khi đồng bộ ví " + walletAddress + ": " + e.getMessage());
+            }
+        }
+        System.out.println("✅ [WEB3 SYNC] Hoàn tất quá trình quét và đồng bộ toàn bộ hệ thống ví!");
     }
 }

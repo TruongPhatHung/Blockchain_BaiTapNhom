@@ -4,11 +4,17 @@ import com.ctut.wms.blockchain_backed.dto.TransferRequest;
 import com.ctut.wms.blockchain_backed.entity.Transaction;
 import com.ctut.wms.blockchain_backed.repository.TransactionRepository;
 import com.ctut.wms.blockchain_backed.service.TransactionService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import org.springframework.http.HttpHeaders;
 import java.util.List;
 import java.util.Map;
 
@@ -119,11 +125,40 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/{transactionId}")
-    public ResponseEntity<?> getTransactionDetail(@PathVariable Long transactionId) {
-        return transactionRepository.findById(transactionId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/verify-onchain/{txHash}")
+    public ResponseEntity<?> verifyTransactionOnChain(@PathVariable String txHash) {
+        try {
+
+            if (!txHash.startsWith("0x")) {
+                return ResponseEntity.badRequest().body("Hash không hợp lệ.");
+            }
+
+            RestTemplate restTemplate = new RestTemplate();
+            ObjectMapper mapper = new ObjectMapper();
+            String rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
+
+            String requestJson = String.format(
+                    "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionByHash\",\"params\":[\"%s\"],\"id\":1}",
+                    txHash
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(rpcUrl, entity, String.class);
+            JsonNode root = mapper.readTree(response.getBody());
+            JsonNode resultNode = root.path("result");
+
+            if (resultNode.isMissingNode() || resultNode.isNull()) {
+                return ResponseEntity.status(404).body("Không tìm thấy trên Sepolia.");
+            }
+
+            return ResponseEntity.ok(resultNode);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi Web3: " + e.getMessage());
+        }
     }
 
     @PostMapping("/pay-bill")

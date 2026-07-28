@@ -55,16 +55,27 @@ public class Admincontroller {
     @PutMapping("/tamper/{txId}")
     public ResponseEntity<?> tamperTransaction(
             @PathVariable Long txId,
-            @RequestBody Map<String, Object> tamperedData
+            @RequestBody java.util.Map<String, Object> tamperedData
     ) {
         try {
-            BigDecimal newAmount = new BigDecimal(tamperedData.get("amount").toString());
-            String newDescription = tamperedData.get("description").toString();
+            // Lấy dữ liệu an toàn, kiểm tra null trước khi chuyển đổi
+            BigDecimal newAmount = null;
+            if (tamperedData.get("amount") != null) {
+                // Ép kiểu an toàn từ mọi định dạng (String, Integer, Double) sang BigDecimal
+                newAmount = new BigDecimal(tamperedData.get("amount").toString());
+            }
 
+            String newDescription = null;
+            if (tamperedData.get("description") != null) {
+                newDescription = tamperedData.get("description").toString();
+            }
+
+            // Gọi xuống Service để lưu
             transactionService.tamperTransactionData(txId, newAmount, newDescription);
 
             return ResponseEntity.ok("Đã ghi đè dữ liệu giả mạo thành công!");
         } catch (Exception e) {
+            e.printStackTrace(); // In chi tiết lỗi ra màn hình đen để dễ gỡ rối
             return ResponseEntity.badRequest().body("Lỗi khi giả mạo dữ liệu: " + e.getMessage());
         }
     }
