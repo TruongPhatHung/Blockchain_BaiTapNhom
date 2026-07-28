@@ -34,21 +34,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.disable())
+                // ĐÃ SỬA: Cho phép CORS hoạt động bình thường để Frontend kết nối không bị chặn
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // THÊM "/uploads/**" VÀO DÒNG NÀY ĐỂ CHO PHÉP HIỂN THỊ ẢNH
+                        // Cho phép hiển thị ảnh và các API công khai
                         .requestMatchers("/api/auth/**", "/api/accounts/register", "/api/transactions/**", "/uploads/**").permitAll()
 
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/staff/**", "/api/support/**").hasAnyRole("STAFF", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/settings").permitAll()
 
-                        // API upload đã được bạn cấu hình đúng
                         .requestMatchers("/api/upload/**", "/api/upload").permitAll()
+
+                        // API xác thực Web3 được mở hoàn toàn công khai
+                        .requestMatchers("/api/transactions/verify-onchain/**").permitAll()
 
                         .requestMatchers("/api/users/**").hasAnyAuthority("USER", "STAFF", "ADMIN")
                         .requestMatchers(

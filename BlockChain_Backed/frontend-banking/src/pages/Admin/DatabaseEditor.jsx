@@ -10,7 +10,6 @@ const DatabaseEditor = () => {
     const [savingId, setSavingId] = useState(null);
     const [editForm, setEditForm] = useState({});
 
-    // 1. Chỉ giữ lại đúng MỘT hàm fetchTransactions sạch sẽ
     const fetchTransactions = async () => {
         try {
             setLoading(true);
@@ -32,12 +31,10 @@ const DatabaseEditor = () => {
         }
     };
 
-    // 2. Gọi hàm trên khi trang vừa mở
     useEffect(() => {
         fetchTransactions();
     }, []);
 
-    // 3. Hàm xử lý khi gõ phím vào ô input
     const handleInputChange = (txId, field, value) => {
         setEditForm(prev => ({
             ...prev,
@@ -48,20 +45,25 @@ const DatabaseEditor = () => {
         }));
     };
 
-    // 4. Hàm Lưu ngầm vào Database
+    // ĐÃ CHỈNH SỬA: Ép kiểu dữ liệu nghiêm ngặt trước khi gửi xuống Backend
     const handleSaveToDB = async (txId) => {
         setSavingId(txId);
         try {
-            const tamperedData = editForm[txId];
-            // Gọi xuống API của Spring Boot
+            // Đảm bảo amount là số, description là chuỗi để Spring Boot không báo lỗi 400
+            const tamperedData = {
+                amount: Number(editForm[txId].amount),
+                description: String(editForm[txId].description)
+            };
+
+            console.log("Đang gửi dữ liệu hack xuống Backend:", tamperedData);
+
             await adminService.tamperTransaction(txId, tamperedData);
 
             alert(`THÀNH CÔNG: Đã lưu lén dữ liệu Khối #${txId} vào Cơ sở dữ liệu!`);
 
-            // Tải lại bảng để hiển thị số tiền mới vừa sửa
             await fetchTransactions();
         } catch (error) {
-            alert("LỖI: Không thể can thiệp DB. Vui lòng kiểm tra lại kết nối.");
+            alert("LỖI: Không thể can thiệp DB. Vui lòng bật F12 xem lỗi Network.");
             console.error(error);
         } finally {
             setSavingId(null);
