@@ -1,4 +1,49 @@
-/* Sử dụng lại layout nền giống Transfer.css */
+/* =========================================
+   BỐ CỤC TỔNG THỂ TRANG (CĂN GIỮA & GIỚI HẠN ĐỘ RỘNG)
+   ========================================= */
+.transfer-page-wrapper {
+    display: flex;
+    justify-content: center; /* Căn giữa card ra giữa màn hình */
+    padding: 40px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.transfer-container {
+    width: 100%;
+    max-width: 680px; /* Thu hẹp độ rộng, tạo form cân đối */
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 32px 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04); /* Thêm đổ bóng mờ chuyên nghiệp */
+    border: 1px solid #f1f5f9;
+}
+
+/* =========================================
+   ĐỊNH DẠNG CHO PHẦN TIÊU ĐỀ TRANG
+   ========================================= */
+.transfer-header-text {
+    margin-bottom: 28px;
+    text-align: center; /* Căn giữa tiêu đề cho đồng bộ với form hẹp */
+}
+
+.transfer-header-text h1 {
+    color: #0f172a; 
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    margin-top: 0;
+}
+
+.transfer-header-text p {
+    color: #64748b;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* =========================================
+   CHI TIẾT GIAO DỊCH
+   ========================================= */
 .confirmation-wrapper {
     display: flex;
     flex-direction: column;
@@ -33,7 +78,7 @@
     color: #64748b;
     font-size: 14px;
     font-weight: 500;
-    min-width: 100px;
+    min-width: 90px;
 }
 
 .detail-value {
@@ -55,10 +100,15 @@
     color: #10b981;
 }
 
+/* =========================================
+   HỘP CẢNH BÁO (ĐÃ CĂN GIỮA)
+   ========================================= */
 .warning-box {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center; /* Đẩy nội dung ra giữa */
+    text-align: center;
+    gap: 10px;
     background-color: #f0fdf4;
     padding: 16px;
     border-radius: 12px;
@@ -77,6 +127,9 @@
     font-weight: 500;
 }
 
+/* =========================================
+   NHÓM NÚT BẤM (BUTTONS)
+   ========================================= */
 .btn-group {
     display: flex;
     gap: 16px;
@@ -88,7 +141,7 @@
     background-color: #f1f5f9;
     color: #475569;
     border: none;
-    padding: 18px;
+    padding: 16px;
     border-radius: 12px;
     font-size: 16px;
     font-weight: 600;
@@ -107,5 +160,24 @@
 
 .btn-group .btn-transfer-modern {
     flex: 2; 
-    margin-top: 0; 
+    margin-top: 0;
+    background-color: #4f46e5; /* Màu chàm đậm chuyên nghiệp */
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-group .btn-transfer-modern:hover:not(:disabled) {
+    background-color: #4338ca;
+}
+
+.btn-group .btn-transfer-modern:disabled,
+.btn-group .btn-transfer-modern.loading {
+    background-color: #94a3b8;
+    cursor: not-allowed;
 }

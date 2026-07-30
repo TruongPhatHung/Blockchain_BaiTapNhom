@@ -2,7 +2,7 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../store/AuthContext';
-import { useLanguage } from '../../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
+import { useLanguage } from '../../store/LanguageContext';
 import { ChevronRight, Edit3, Lock, Shield, Fingerprint, Bell, Megaphone, Globe } from 'lucide-react';
 import './Settings.css';
 
@@ -10,13 +10,30 @@ const Settings = () => {
     const { user, token, updateUser } = useContext(AuthContext);
     const navigate = useNavigate();
     
-    // Lấy các hàm từ LanguageContext
     const { t, language, changeLanguage } = useLanguage();
 
-    // Lấy chữ cái đầu làm Avatar
     const avatarLetter = user?.username ? user.username.charAt(0).toUpperCase() : 'U';
 
-    // Hàm gọi API cập nhật nhanh cấu hình Toggles trực tiếp lên Database
+    // 🌟 HÀM XỬ LÝ URL ẢNH ĐẠI DIỆN ĐỒNG BỘ VỚI IP MÁY CHỦ
+    const getImageUrl = (rawUrl) => {
+        if (!rawUrl) return '';
+        const serverOrigin = 'http://10.10.61.92:8080';
+
+        if (rawUrl.startsWith('http')) {
+            try {
+                const parsedUrl = new URL(rawUrl);
+                if (parsedUrl.hostname === 'localhost') {
+                    return `${serverOrigin}${parsedUrl.pathname}${parsedUrl.search}`;
+                }
+                return rawUrl;
+            } catch (e) {
+                return rawUrl;
+            }
+        }
+        const path = rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`;
+        return `${serverOrigin}${path}`;
+    };
+
     const handleToggleSetting = async (settingKey, currentValue) => {
         if (!user?.username) return;
 
@@ -46,13 +63,11 @@ const Settings = () => {
     return (
         <div className="settings-container">
             <div className="settings-header">
-                {/* SỬ DỤNG HÀM t() ĐỂ DỊCH NGÔN NGỮ */}
                 <h2 className="settings-title">{t('settingsTitle')}</h2>
                 <p className="settings-subtitle">{t('settingsSubtitle')}</p>
             </div>
 
             <div className="settings-grid">
-                {/* Cột Trái */}
                 <div className="settings-col">
                     <div className="st-card">
                         <div className="st-card-header">
@@ -63,15 +78,18 @@ const Settings = () => {
                         </div>
                         
                         <div className="st-profile-header">
-                            <div className="st-avatar-circle">{user?.avatarUrl ? <img src={user.avatarUrl} alt="Avatar" /> : avatarLetter}</div>
-                            <button className="btn-change-avatar">{t('changePhoto')}</button>
+                            {/* ĐÃ ÁP DỤNG HÀM getImageUrl Ở ĐÂY */}
+                            <div className="st-avatar-circle">
+                                {user?.avatarUrl ? <img src={getImageUrl(user.avatarUrl)} alt="Avatar" /> : avatarLetter}
+                            </div>
+                            <button className="btn-change-avatar" onClick={() => navigate('/settings/edit-profile')}>{t('changePhoto')}</button>
                         </div>
 
                         <div className="st-list">
                             <div className="st-list-item static-item">
                                 <div className="st-item-content">
                                     <span className="st-label">{t('fullName')}</span>
-                                    <span className="st-value">{user?.username || t('notUpdated')}</span>
+                                    <span className="st-value">{user?.fullName || user?.username || t('notUpdated')}</span>
                                 </div>
                             </div>
                             <div className="st-list-item static-item">
@@ -96,7 +114,6 @@ const Settings = () => {
                                 <div className="st-item-icon-wrapper blue-bg"><Globe size={18} /></div>
                                 <div className="st-item-content">
                                     <span className="st-label">{t('language')}</span>
-                                    {/* THÊM DROPDOWN CHỌN NGÔN NGỮ TẠI ĐÂY */}
                                     <select 
                                         value={language} 
                                         onChange={(e) => changeLanguage(e.target.value)}
@@ -121,7 +138,6 @@ const Settings = () => {
                     </div>
                 </div>
 
-                {/* Cột Phải */}
                 <div className="settings-col">
                     <div className="st-card">
                         <h3 className="st-card-title">{t('security')}</h3>

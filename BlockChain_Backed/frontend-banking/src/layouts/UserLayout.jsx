@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../store/AuthContext';
-import { useLanguage } from '../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
+import { useLanguage } from '../store/LanguageContext'; 
 import './UserLayout.css'; 
 
 const UserLayout = () => {
     const { user, logout } = useContext(AuthContext);
-    const { t } = useLanguage(); // SỬ DỤNG HÀM DỊCH t()
+    const { t } = useLanguage(); 
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -14,14 +14,32 @@ const UserLayout = () => {
         navigate('/login');
     };
 
-    // Trích xuất chữ cái đầu tiên của Username làm Avatar (Mặc định là 'H' nếu chưa đăng nhập)
     const firstLetter = user?.username ? user.username.charAt(0).toUpperCase() : 'H';
+
+    // 🌟 HÀM XỬ LÝ URL ẢNH ĐẠI DIỆN TRÊN NAVBAR (ĐỒNG BỘ VỚI IP MÁY CHỦ)
+    const getImageUrl = (rawUrl) => {
+        if (!rawUrl) return '';
+        const serverOrigin = 'http://10.10.61.92:8080';
+
+        if (rawUrl.startsWith('http')) {
+            try {
+                const parsedUrl = new URL(rawUrl);
+                if (parsedUrl.hostname === 'localhost') {
+                    return `${serverOrigin}${parsedUrl.pathname}${parsedUrl.search}`;
+                }
+                return rawUrl;
+            } catch (e) {
+                return rawUrl;
+            }
+        }
+        const path = rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`;
+        return `${serverOrigin}${path}`;
+    };
 
     return (
         <div className="user-layout">
             {/* ---------------- 1. SIDEBAR BÊN TRÁI ---------------- */}
             <aside className="sidebar">
-                {/* Logo & Tên Ngân Hàng */}
                 <div className="sidebar-logo">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#2563eb" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round"/>
@@ -31,7 +49,6 @@ const UserLayout = () => {
                     <span>ABC BANK</span>
                 </div>
                 
-                {/* Danh sách Menu điều hướng */}
                 <ul className="sidebar-menu">
                     <li>
                         <NavLink to="/dashboard" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
@@ -81,7 +98,6 @@ const UserLayout = () => {
                     </li>
                 </ul>
 
-                {/* Nút Đăng xuất ở dưới cùng Sidebar */}
                 <div className="sidebar-footer">
                     <button onClick={handleLogout} className="logout-btn">
                         <svg className="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -96,7 +112,6 @@ const UserLayout = () => {
 
             {/* ---------------- 2. KHUNG NỘI DUNG CHÍNH (MAIN CONTENT) ---------------- */}
             <main className="main-content">
-                {/* Navbar / Header Trên Cùng */}
                 <header className="main-header">
                     <div className="header-search">
                         <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -107,7 +122,6 @@ const UserLayout = () => {
                     </div>
 
                     <div className="header-utilities">
-                        {/* Biểu tượng chuông thông báo */}
                         <button className="util-icon-btn" title={t('notifications')}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -116,12 +130,11 @@ const UserLayout = () => {
                             <span className="badge-dot"></span>
                         </button>
                         
-                        {/* Profile người dùng */}
                         <div className="user-profile-wrapper">
-                            {/* KIỂM TRA ĐIỀU KIỆN HIỂN THỊ AVATAR TRONG NAVBAR */}
+                            {/* ĐÃ ÁP DỤNG HÀM getImageUrl Ở ĐÂY */}
                             {user?.avatarUrl ? (
                                 <img 
-                                    src={user.avatarUrl} 
+                                    src={getImageUrl(user.avatarUrl)} 
                                     alt="Ảnh đại diện" 
                                     className="user-avatar-image" 
                                 />
@@ -137,12 +150,10 @@ const UserLayout = () => {
                     </div>
                 </header>
 
-                {/* Khu vực hiển thị nội dung các trang con (Dashboard, Transfer, History...) */}
                 <div className="content-body">
                     <Outlet />
                 </div>
 
-                {/* Footer Mới thêm vào theo thiết kế */}
                 <footer className="main-footer">
                     <div className="footer-copyright">
                         {t('footerRights')}
