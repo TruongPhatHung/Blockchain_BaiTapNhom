@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../store/AuthContext';
 import { useLanguage } from '../store/LanguageContext'; 
@@ -9,6 +9,14 @@ const UserLayout = () => {
     const { t } = useLanguage(); 
     const navigate = useNavigate();
 
+    // 🌟 THÊM STATE ĐỂ QUẢN LÝ LỖI TẢI ẢNH
+    const [imageError, setImageError] = useState(false);
+
+    // 🌟 NẾU USER CẬP NHẬT ẢNH MỚI, ĐẶT LẠI TRẠNG THÁI LỖI VỀ FALSE ĐỂ THỬ TẢI LẠI
+    useEffect(() => {
+        setImageError(false);
+    }, [user?.avatarUrl]);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -16,10 +24,10 @@ const UserLayout = () => {
 
     const firstLetter = user?.username ? user.username.charAt(0).toUpperCase() : 'H';
 
-    // 🌟 HÀM XỬ LÝ URL ẢNH ĐẠI DIỆN TRÊN NAVBAR (ĐỒNG BỘ VỚI IP MÁY CHỦ)
+    // Hàm xử lý URL ảnh đại diện (Đồng bộ với IP máy chủ)
     const getImageUrl = (rawUrl) => {
         if (!rawUrl) return '';
-        const serverOrigin = 'http://10.10.61.92:8080';
+        const serverOrigin = 'http://10.10.70.89:8080';
 
         if (rawUrl.startsWith('http')) {
             try {
@@ -131,14 +139,16 @@ const UserLayout = () => {
                         </button>
                         
                         <div className="user-profile-wrapper">
-                            {/* ĐÃ ÁP DỤNG HÀM getImageUrl Ở ĐÂY */}
-                            {user?.avatarUrl ? (
+                            {/* 🌟 KIỂM TRA ĐIỀU KIỆN: CÓ URL VÀ KHÔNG BỊ LỖI THÌ HIỂN THỊ ẢNH */}
+                            {user?.avatarUrl && !imageError ? (
                                 <img 
                                     src={getImageUrl(user.avatarUrl)} 
                                     alt="Ảnh đại diện" 
                                     className="user-avatar-image" 
+                                    onError={() => setImageError(true)} // Nếu ảnh lỗi, set state lỗi để chuyển qua hiện chữ
                                 />
                             ) : (
+                                /* NẾU LỖI ẢNH HOẶC KHÔNG CÓ URL SẼ HIỂN THỊ CHỮ CÁI ĐẦU */
                                 <div className="user-avatar-circle">{firstLetter}</div>
                             )}
                             
