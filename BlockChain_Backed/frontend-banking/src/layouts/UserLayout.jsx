@@ -19,7 +19,7 @@ const UserLayout = () => {
     // 🌟 HÀM XỬ LÝ URL ẢNH ĐẠI DIỆN TRÊN NAVBAR (ĐỒNG BỘ VỚI IP MÁY CHỦ)
     const getImageUrl = (rawUrl) => {
         if (!rawUrl) return '';
-        const serverOrigin = 'http://10.10.61.92:8080';
+        const serverOrigin = 'http://localhost:8080';
 
         if (rawUrl.startsWith('http')) {
             try {

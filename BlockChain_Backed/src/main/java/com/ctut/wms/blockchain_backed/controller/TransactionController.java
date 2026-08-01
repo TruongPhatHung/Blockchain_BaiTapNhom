@@ -176,4 +176,23 @@ public class TransactionController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    /**
+     * API: Lấy chi tiết một giao dịch theo ID
+     * GET /api/transactions/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getTransactionById(@PathVariable Long id) {
+        try {
+            // Tìm kiếm giao dịch trong cơ sở dữ liệu dựa vào ID (Ví dụ: ID = 2)
+            Transaction transaction = transactionRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch số " + id));
+
+            // Nếu tìm thấy, trả về dữ liệu thành công cho Frontend
+            return ResponseEntity.ok(transaction);
+
+        } catch (Exception e) {
+            // Nếu không tìm thấy hoặc có lỗi, trả về lỗi 404 Not Found kèm câu thông báo
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
 }

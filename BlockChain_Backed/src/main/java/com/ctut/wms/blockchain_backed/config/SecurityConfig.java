@@ -40,7 +40,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                         // Cho phép hiển thị ảnh và các API công khai
                         .requestMatchers("/api/auth/**", "/api/accounts/register", "/api/transactions/**", "/uploads/**").permitAll()
 
@@ -52,7 +51,7 @@ public class SecurityConfig {
 
                         // API xác thực Web3 được mở hoàn toàn công khai
                         .requestMatchers("/api/transactions/verify-onchain/**").permitAll()
-
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/users/**").hasAnyAuthority("USER", "STAFF", "ADMIN")
                         .requestMatchers(
                                 "/api/user/**",

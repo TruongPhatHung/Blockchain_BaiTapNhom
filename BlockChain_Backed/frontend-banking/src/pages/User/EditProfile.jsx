@@ -35,8 +35,8 @@ const EditProfile = () => {
         if (!rawUrl) return '';
 
         // Lấy URL gốc máy chủ từ Axios
-        const apiBase = api.defaults.baseURL || 'http://10.10.61.92:8080';
-        let serverOrigin = 'http://10.10.61.92:8080';
+        const apiBase = api.defaults.baseURL || 'http://:8080';
+        let serverOrigin = 'http://localhost:8080';
         
         try {
             serverOrigin = new URL(apiBase, window.location.href).origin;

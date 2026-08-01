@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, Calendar, X, ExternalLink, CheckCircle2 } from 'lucide-react';
 import txService from '../../services/tx.service';
-import { useLanguage } from '../../store/LanguageContext'; // IMPORT HOOK NGÔN NGỮ
+import api from '../../services/api'; // 🔥 ĐÃ BỔ SUNG: Import api để gọi trực tiếp Sổ cái
+import { useLanguage } from '../../store/LanguageContext';
 import './History.css';
 
 const shortAddress = (address = '') => address.length > 14 ? `${address.slice(0, 8)}...${address.slice(-6)}` : address;
 const formatDate = (timestamp) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(timestamp));
 
 const History = () => {
-    const { t } = useLanguage(); // KHỞI TẠO HÀM DỊCH
+    const { t } = useLanguage();
 
     const [transactions, setTransactions] = useState([]);
     const [walletAddress, setWalletAddress] = useState('');
@@ -20,12 +21,17 @@ const History = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
+                // 1. Kết nối MetaMask để lấy địa chỉ ví cá nhân (dùng để xác định chiều mũi tên nhận/chuyển)
                 if (!window.ethereum) throw new Error(t('errNoMetamaskHistory') || 'Không tìm thấy MetaMask. Hãy kết nối ví để xem lịch sử.');
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (!accounts.length) throw new Error(t('errConnectWalletHistory') || 'Hãy kết nối ví MetaMask để xem lịch sử giao dịch.');
                 const address = accounts[0];
                 setWalletAddress(address);
-                setTransactions(await txService.getHistory(address));
+
+                // 2. 🔥 ĐÃ SỬA: Gọi API Ledger để lấy TOÀN BỘ 100% giao dịch có trong Database
+                const response = await api.get('/transactions/ledger');
+                setTransactions(response.data);
+
             } catch (requestError) {
                 console.error('Lỗi khi tải lịch sử:', requestError);
                 setError(requestError.response?.data?.message || requestError.message || t('errLoadHistory') || 'Không thể tải lịch sử giao dịch.');
@@ -34,7 +40,7 @@ const History = () => {
             }
         };
         fetchHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const showDetail = async (transactionId) => {
@@ -54,9 +60,9 @@ const History = () => {
                 {/* Phần Tiêu đề */}
                 <div className="history-header">
                     <div>
-                        <h2 className="history-title">{t('transactionHistory') || 'Lịch sử giao dịch'}</h2>
+                        <h2 className="history-title">{t('transactionHistory') || 'Lịch sử Sổ Cái Chung'}</h2>
                         <p className="history-subtitle">
-                            {t('sepoliaTransactionsForWallet') || 'Các giao dịch SepoliaETH của ví'} <strong>{walletAddress ? shortAddress(walletAddress) : 'MetaMask'}</strong>.
+                            {t('sepoliaTransactionsForWallet') || 'Hiển thị toàn bộ giao dịch trên hệ thống. Ví hiện tại của bạn là:'} <strong>{walletAddress ? shortAddress(walletAddress) : 'MetaMask'}</strong>.
                         </p>
                     </div>
                 </div>
@@ -77,7 +83,7 @@ const History = () => {
                 {/* Phần Danh sách */}
                 <div className="transaction-list-container">
                     <div className="list-header">
-                        <span className="month-title">{t('onChainTransactions') || 'Giao dịch on-chain'}</span>
+                        <span className="month-title">{t('onChainTransactions') || 'Toàn bộ Giao dịch on-chain'}</span>
                         <span className="month-total">{transactions.length} {t('transactionsCount') || 'giao dịch'}</span>
                     </div>
 
@@ -89,14 +95,15 @@ const History = () => {
                     ) : error ? (
                         <div className="state-container error-state">{error}</div>
                     ) : transactions.length === 0 ? (
-                        <div className="state-container empty-state">{t('noTransactions') || 'Chưa có giao dịch nào từ ví này.'}</div>
+                        <div className="state-container empty-state">{t('noTransactions') || 'Hệ thống chưa có giao dịch nào.'}</div>
                     ) : (
                         <div className="transaction-list">
                             {transactions.map((tx) => {
+                                // Logic này giúp nhận diện giao dịch nào có ví của cậu tham gia để bôi đỏ/xanh chuẩn xác
                                 const isIncoming = tx.receiverAccount?.toLowerCase() === walletAddress.toLowerCase();
                                 const TxIcon = isIncoming ? ArrowDownLeft : ArrowUpRight;
                                 const counterparty = isIncoming ? tx.senderAccount : tx.receiverAccount;
-                                
+
                                 return (
                                     <div className="tx-item" key={tx.transactionId}>
                                         <div className="tx-item-left">
@@ -107,13 +114,13 @@ const History = () => {
                                                 <span className="tx-name">
                                                     {tx.description || (isIncoming ? (t('receiveSepoliaETH') || 'Nhận SepoliaETH') : (t('sendSepoliaETH') || 'Chuyển SepoliaETH'))}
                                                 </span>
-                                                <span className="tx-meta">{formatDate(tx.timestamp)} • {shortAddress(counterparty)}</span>
+                                                <span className="tx-meta">{formatDate(tx.timestamp)} • Đối tác: {shortAddress(counterparty)}</span>
                                             </div>
                                         </div>
                                         <div className="tx-item-right">
                                             <div className="tx-amount-group">
                                                 <span className={`tx-amount ${isIncoming ? 'positive' : 'negative'}`}>
-                                                    {isIncoming ? '+' : '-'}{Number(tx.amount).toFixed(4)} SepoliaETH
+                                                    {isIncoming ? '+' : '-'}{Number(tx.amount).toFixed(4)} ETH
                                                 </span>
                                                 <span className={`tx-status ${tx.status === 'SUCCESS' ? 'success' : 'pending'}`}>
                                                     {tx.status === 'SUCCESS' ? (t('success') || 'Thành công') : tx.status}
@@ -138,7 +145,7 @@ const History = () => {
                         <button type="button" className="tx-modal-close" onClick={() => setSelectedTransaction(null)} disabled={detailLoading} aria-label="Đóng">
                             <X size={20} />
                         </button>
-                        
+
                         {detailLoading ? (
                             <div className="state-container loading-state" style={{ height: '300px' }}>
                                 <div className="spinner"></div>
@@ -176,7 +183,7 @@ const History = () => {
                                         <span className="detail-label">{t('transferMemo') || 'Nội dung chuyển khoản'}</span>
                                         <strong className="detail-value">{selectedTransaction.description || t('noMemo') || 'Không có nội dung'}</strong>
                                     </div>
-                                    
+
                                     <div className="tx-modal-divider"></div>
 
                                     <div className="tx-detail-row">
