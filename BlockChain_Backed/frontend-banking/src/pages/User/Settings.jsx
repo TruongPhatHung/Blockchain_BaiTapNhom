@@ -17,7 +17,7 @@ const Settings = () => {
     // 🌟 HÀM XỬ LÝ URL ẢNH ĐẠI DIỆN ĐỒNG BỘ VỚI IP MÁY CHỦ
     const getImageUrl = (rawUrl) => {
         if (!rawUrl) return '';
-        const serverOrigin = 'http://10.10.61.92:8080';
+        const serverOrigin = 'http://10.10.70.89:8080';
 
         if (rawUrl.startsWith('http')) {
             try {
@@ -39,7 +39,7 @@ const Settings = () => {
 
         const newValue = !currentValue;
         try {
-            const response = await fetch(`http://10.10.61.92:8080/api/users/${user.username}/settings`, { 
+            const response = await fetch(`http://10.10.70.89:8080/api/users/${user.username}/settings`, { 
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

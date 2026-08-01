@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
-import { ArrowLeft, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import txService from '../../services/tx.service';
 import './TransferConfirm.css';
 
@@ -11,6 +11,19 @@ const TransferConfirm = () => {
     const transferData = location.state;
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ message: '', status: '' });
+    
+    // 🌟 THÊM STATE ĐỂ QUẢN LÝ TOAST THÔNG BÁO
+    const [showToast, setShowToast] = useState(false);
+
+    // 🌟 EFFECT TỰ ĐỘNG ẨN TOAST SAU 5 GIÂY
+    useEffect(() => {
+        if (showToast) {
+            const timer = setTimeout(() => {
+                setShowToast(false);
+            }, 5000);
+            return () => clearTimeout(timer); // Xóa timer nếu component unmount
+        }
+    }, [showToast]);
 
     if (!transferData) {
         navigate('/transfer');
@@ -36,7 +49,6 @@ const TransferConfirm = () => {
             setNotification({ message: 'Giao dịch đang được xác nhận trên blockchain...', status: 'info' });
             await tx.wait();
 
-            // Only persist a record after the on-chain transaction is confirmed.
             await txService.recordOnChainTransfer({
                 senderWallet: sender,
                 receiverWallet: recipient,
@@ -49,6 +61,9 @@ const TransferConfirm = () => {
                 message: `Chuyển tiền thành công. Mã giao dịch: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
                 status: 'success',
             });
+            // 🌟 HIỂN THỊ TOAST KHI THÀNH CÔNG
+            setShowToast(true);
+            
         } catch (error) {
             console.error(error);
             const isRecordError = error.response?.data || error.message;
@@ -63,6 +78,19 @@ const TransferConfirm = () => {
 
     return (
         <div className="transfer-page-wrapper">
+            
+            {/* 🌟 TOAST NOTIFICATION GÓC MÀN HÌNH */}
+            <div className={`toast-notification ${showToast ? 'show' : ''}`}>
+                <CheckCircle2 size={24} color="#ffffff" />
+                <div className="toast-content">
+                    <h4>Giao dịch thành công!</h4>
+                    <p>Tiền đã được chuyển đến người nhận an toàn.</p>
+                </div>
+                <button className="toast-close-btn" onClick={() => setShowToast(false)}>
+                    <X size={18} />
+                </button>
+            </div>
+
             <div className="transfer-container">
                 <div className="transfer-header-text">
                     <h1>Xác nhận giao dịch</h1>
@@ -70,6 +98,7 @@ const TransferConfirm = () => {
                 </div>
 
                 <div className="transfer-card-modern">
+                    {/* GIỮ LẠI THÔNG BÁO LỖI/ĐANG XỬ LÝ NẾU CẦN TRONG FORM */}
                     {notification.message && (
                         <div className={`notification-alert ${notification.status}`}>
                             {notification.status === 'success' && <CheckCircle2 size={20} />}
