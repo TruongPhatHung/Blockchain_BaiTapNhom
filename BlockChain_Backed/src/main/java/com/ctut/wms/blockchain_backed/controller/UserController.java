@@ -5,6 +5,7 @@ import com.ctut.wms.blockchain_backed.entity.User;
 import com.ctut.wms.blockchain_backed.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder; // Kéo thư viện mã hóa mật khẩu vào
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -16,6 +17,10 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    // Tích hợp công cụ mã hóa mật khẩu của Spring Security
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // ==========================================
     // API DÀNH CHO KHÁCH HÀNG
@@ -40,6 +45,10 @@ public class UserController {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
+            // 🌟 ĐÃ KHẮC PHỤC: Thêm đoạn này để Backend bắt được "Họ và tên" từ ReactJS
+            if (updates.containsKey("fullName")) {
+                user.setFullName(updates.get("fullName").toString());
+            }
             if (updates.containsKey("email")) {
                 user.setEmail(updates.get("email").toString());
             }
@@ -56,6 +65,7 @@ public class UserController {
                 user.setIsNotificationEnabled((Boolean) updates.get("isNotificationEnabled"));
             }
 
+            // Lưu toàn bộ dữ liệu mới
             userRepository.save(user);
             return ResponseEntity.ok(user);
 
@@ -68,11 +78,10 @@ public class UserController {
     // API DÀNH CHO QUẢN TRỊ VIÊN (ADMIN)
     // ==========================================
 
-    // ĐÃ BỔ SUNG: API Lấy danh sách toàn bộ người dùng
+    // API: Lấy danh sách toàn bộ người dùng
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
         try {
-            // Lấy toàn bộ danh sách User từ Database và trả về
             return ResponseEntity.ok(userRepository.findAll());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Lỗi khi lấy danh sách người dùng: " + e.getMessage());
@@ -111,11 +120,11 @@ public class UserController {
                 user.setStatus(updates.get("status").toString());
             }
 
-            // Cập nhật mật khẩu (Chỉ khi Admin có nhập mật khẩu mới vào form)
+            // 🌟 ĐÃ TỐI ƯU: Mã hóa mật khẩu an toàn trước khi lưu vào cơ sở dữ liệu
             if (updates.containsKey("password") && !updates.get("password").toString().trim().isEmpty()) {
                 String newPassword = updates.get("password").toString();
-                // Lưu ý: Sau này khi tích hợp bảo mật, hãy bọc biến newPassword bằng PasswordEncoder.encode()
-                user.setPasswordHash(newPassword);
+                // Bọc mật khẩu bằng thuật toán mã hóa (VD: BCrypt) thay vì lưu thô
+                user.setPasswordHash(passwordEncoder.encode(newPassword));
             }
 
             // Lưu dữ liệu vào CSDL

@@ -10,12 +10,13 @@ const EditProfile = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    
-    const [formData, setFormData] = useState({ 
-        fullName: user?.fullName || '', 
-        email: user?.email || '', 
-        phoneNumber: user?.phoneNumber || '', 
-        avatarUrl: user?.avatarUrl || '' 
+
+    // Khởi tạo state chứa TOÀN BỘ thông tin cá nhân
+    const [formData, setFormData] = useState({
+        fullName: user?.fullName || '',
+        email: user?.email || '',
+        phoneNumber: user?.phoneNumber || '',
+        avatarUrl: user?.avatarUrl || ''
     });
 
     // Cập nhật lại formData khi thông tin user trong AuthContext thay đổi
@@ -35,11 +36,9 @@ const EditProfile = () => {
         if (!rawUrl) return '';
 
         // Lấy URL gốc máy chủ từ Axios
-
         const apiBase = api.defaults.baseURL || 'http://localhost:8080';
         let serverOrigin = 'http://localhost:8080';
 
-        
         try {
             serverOrigin = new URL(apiBase, window.location.href).origin;
         } catch (e) {
@@ -60,14 +59,14 @@ const EditProfile = () => {
             }
         }
 
-        // Trường hợp 2: Đường dẫn tương đối hoặc chỉ là tên file (VD: a1183969...jpg)
-        // Nếu rawUrl chưa có dấu '/', ta tự động thêm '/uploads/' vào trước
+        // Trường hợp 2: Đường dẫn tương đối hoặc chỉ là tên file
         const path = rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`;
         return `${serverOrigin}${path}`;
     };
 
     const avatarLetter = (formData.fullName || user?.username || 'U').charAt(0).toUpperCase();
 
+    // Hàm bắt sự kiện thay đổi dữ liệu trên form
     const handleChange = (event) => {
         setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
     };
@@ -79,14 +78,14 @@ const EditProfile = () => {
         if (image.size > 1_500_000) return setMessage('Ảnh phải nhỏ hơn 1.5 MB.');
 
         setMessage('Đang tải ảnh lên...');
-        
+
         const uploadData = new FormData();
         uploadData.append('file', image);
 
         try {
             const uploadResponse = await api.post('/upload', uploadData);
-            const shortImageUrl = uploadResponse.data.url; 
-            
+            const shortImageUrl = uploadResponse.data.url;
+
             setFormData((current) => ({ ...current, avatarUrl: shortImageUrl }));
             setMessage('Tải ảnh lên thành công! Nhấn Lưu thay đổi.');
         } catch (error) {
@@ -95,19 +94,39 @@ const EditProfile = () => {
         }
     };
 
+    // 🌟 ĐÃ NÂNG CẤP: Hàm gửi toàn bộ dữ liệu an toàn
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (!user?.username) return setMessage('Không xác định được tài khoản.');
-        setLoading(true); 
+
+        setLoading(true);
         setMessage('');
+
         try {
+            // Gửi toàn bộ formData (fullName, email, phoneNumber, avatarUrl)
             const response = await api.put(`/users/${user.username}/settings`, formData);
+
+            // Cập nhật Context
             updateUser(response.data);
+
+            // Thông báo thành công
+            alert('🎉 Thông tin cá nhân của bạn đã được cập nhật thành công!');
             navigate('/settings');
+
         } catch (error) {
-            setMessage(error.response?.data || 'Không thể lưu thông tin. Vui lòng thử lại.');
-        } finally { 
-            setLoading(false); 
+            console.error("Lỗi khi lưu thông tin:", error);
+            let errorMsg = 'Không thể lưu thông tin. Vui lòng thử lại.';
+
+            if (error.response?.data) {
+                if (typeof error.response.data === 'object' && error.response.data.message) {
+                    errorMsg = error.response.data.message;
+                } else if (typeof error.response.data === 'string') {
+                    errorMsg = error.response.data;
+                }
+            }
+            setMessage(errorMsg);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -124,10 +143,10 @@ const EditProfile = () => {
                 <form onSubmit={handleSubmit} className="ep-form">
                     <div className="ep-avatar-section">
                         {formData.avatarUrl ? (
-                            <img 
-                                className="ep-avatar-preview" 
-                                src={getImageUrl(formData.avatarUrl)} 
-                                alt="Ảnh đại diện" 
+                            <img
+                                className="ep-avatar-preview"
+                                src={getImageUrl(formData.avatarUrl)}
+                                alt="Ảnh đại diện"
                             />
                         ) : (
                             <div className="ep-avatar-preview ep-avatar-fallback">{avatarLetter}</div>
@@ -141,7 +160,7 @@ const EditProfile = () => {
                             </label>
                         </div>
                     </div>
-                    
+
                     <div className="ep-form-group">
                         <label className="ep-label">Tên đăng nhập</label>
                         <div className="ep-input-wrapper disabled">

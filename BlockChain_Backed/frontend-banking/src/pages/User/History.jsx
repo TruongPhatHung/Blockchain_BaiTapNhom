@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, Calendar, X, ExternalLink, CheckCircle2 } from 'lucide-react';
 import txService from '../../services/tx.service';
-import api from '../../services/api'; // 🔥 ĐÃ BỔ SUNG: Import api để gọi trực tiếp Sổ cái
 import { useLanguage } from '../../store/LanguageContext';
 import './History.css';
 
@@ -21,16 +20,19 @@ const History = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                // 1. Kết nối MetaMask để lấy địa chỉ ví cá nhân (dùng để xác định chiều mũi tên nhận/chuyển)
+                // 1. Kết nối MetaMask để lấy địa chỉ ví cá nhân hiện tại
                 if (!window.ethereum) throw new Error(t('errNoMetamaskHistory') || 'Không tìm thấy MetaMask. Hãy kết nối ví để xem lịch sử.');
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (!accounts.length) throw new Error(t('errConnectWalletHistory') || 'Hãy kết nối ví MetaMask để xem lịch sử giao dịch.');
+
                 const address = accounts[0];
                 setWalletAddress(address);
 
-                // 2. 🔥 ĐÃ SỬA: Gọi API Ledger để lấy TOÀN BỘ 100% giao dịch có trong Database
-                const response = await api.get('/transactions/ledger');
-                setTransactions(response.data);
+                // 2. 🔥 ĐÃ SỬA LẠI: Chỉ lấy lịch sử của đúng ID ví hiện tại thông qua txService
+                const personalHistory = await txService.getHistory(address);
+
+                // Đảm bảo dữ liệu set vào state luôn là một mảng
+                setTransactions(personalHistory || []);
 
             } catch (requestError) {
                 console.error('Lỗi khi tải lịch sử:', requestError);
@@ -60,9 +62,9 @@ const History = () => {
                 {/* Phần Tiêu đề */}
                 <div className="history-header">
                     <div>
-                        <h2 className="history-title">{t('transactionHistory') || 'Lịch sử Sổ Cái Chung'}</h2>
+                        <h2 className="history-title">{t('transactionHistory') || 'Lịch sử giao dịch'}</h2>
                         <p className="history-subtitle">
-                            {t('sepoliaTransactionsForWallet') || 'Hiển thị toàn bộ giao dịch trên hệ thống. Ví hiện tại của bạn là:'} <strong>{walletAddress ? shortAddress(walletAddress) : 'MetaMask'}</strong>.
+                            {t('sepoliaTransactionsForWallet') || 'Các giao dịch SepoliaETH của ví'} <strong>{walletAddress ? shortAddress(walletAddress) : 'MetaMask'}</strong>.
                         </p>
                     </div>
                 </div>
@@ -83,7 +85,7 @@ const History = () => {
                 {/* Phần Danh sách */}
                 <div className="transaction-list-container">
                     <div className="list-header">
-                        <span className="month-title">{t('onChainTransactions') || 'Toàn bộ Giao dịch on-chain'}</span>
+                        <span className="month-title">{t('onChainTransactions') || 'Giao dịch on-chain'}</span>
                         <span className="month-total">{transactions.length} {t('transactionsCount') || 'giao dịch'}</span>
                     </div>
 
@@ -95,11 +97,10 @@ const History = () => {
                     ) : error ? (
                         <div className="state-container error-state">{error}</div>
                     ) : transactions.length === 0 ? (
-                        <div className="state-container empty-state">{t('noTransactions') || 'Hệ thống chưa có giao dịch nào.'}</div>
+                        <div className="state-container empty-state">{t('noTransactions') || 'Chưa có giao dịch nào từ ví này.'}</div>
                     ) : (
                         <div className="transaction-list">
                             {transactions.map((tx) => {
-                                // Logic này giúp nhận diện giao dịch nào có ví của cậu tham gia để bôi đỏ/xanh chuẩn xác
                                 const isIncoming = tx.receiverAccount?.toLowerCase() === walletAddress.toLowerCase();
                                 const TxIcon = isIncoming ? ArrowDownLeft : ArrowUpRight;
                                 const counterparty = isIncoming ? tx.senderAccount : tx.receiverAccount;
@@ -153,7 +154,7 @@ const History = () => {
                             </div>
                         ) : (
                             <>
-                                {/* Modal Header (Biên lai) */}
+                                {/* Modal Header */}
                                 <div className="tx-modal-header">
                                     <div className="tx-modal-icon">
                                         <CheckCircle2 color="#059669" size={48} strokeWidth={1.5} />
@@ -165,7 +166,7 @@ const History = () => {
                                     <span className="tx-modal-time">{formatDate(selectedTransaction.timestamp)}</span>
                                 </div>
 
-                                {/* Modal Body (Bảng thông tin chi tiết) */}
+                                {/* Modal Body */}
                                 <div className="tx-modal-body">
                                     <div className="tx-detail-row">
                                         <span className="detail-label">{t('internalTxId') || 'Mã giao dịch nội bộ'}</span>

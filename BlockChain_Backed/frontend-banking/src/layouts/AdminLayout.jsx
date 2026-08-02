@@ -33,7 +33,7 @@ const AdminLayout = () => {
                     </li>
 
                     <li>
-                        {/* Lưu ý: Giữ lại style chữ đỏ cho trang cảnh báo thao túng DB khi không active */}
+                        
                         <Link
                             to="/admin/editor"
                             className={`admin-sidebar-item ${location.pathname.includes('/admin/editor') ? 'active' : ''}`}
@@ -58,12 +58,7 @@ const AdminLayout = () => {
                         </Link>
                     </li>
 
-                    <li>
-                        <Link to="/admin/audit" className={`admin-sidebar-item ${location.pathname.includes('/admin/audit') ? 'active' : ''}`}>
-                            <ClipboardList size={20} />
-                            Nhật Ký Hệ Thống
-                        </Link>
-                    </li>
+                    
                 </ul>
 
                 {/* Nút đăng xuất đã được đẩy xuống đáy nhờ thuộc tính flex: 1 của danh sách menu */}
